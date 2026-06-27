@@ -60,3 +60,21 @@ Sluice automation decision:
 - Primary path: support CKB auto-accept detection and `ChannelReady` tracking after `open_channel`.
 - Fallback path: support manual-accept guidance when auto-accept is disabled or does not trigger.
 - Phase 3 should not assume manual `accept_channel` is always required.
+
+## 2026-06-27 Phase 3A
+
+Phase 3A result:
+
+- A fresh active Fiber node setup was used for the payment proof after regenerating local test nodes for clean credential recovery.
+- node2 created a Fibt invoice for `100000000` shannons, which is `1 CKB`.
+- node1 paid the invoice successfully.
+- `payment get_payment` on node1 returned `Success`.
+- `payment list_payments --status Success` included the payment.
+- `invoice get_invoice` on node2 showed the invoice as `Paid`.
+
+Decision:
+
+- Phase 3A is passed.
+- The ready reserve-aware channel is confirmed as usable for real payment traffic.
+- The full before/after demo is still pending because this proof used an already-ready channel.
+- Next step is Phase 3B: prove the before state fails, then Sluice-style reserve-aware channel setup makes the same style payment succeed.

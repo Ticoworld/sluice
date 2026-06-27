@@ -153,3 +153,31 @@ Sluice decision:
 - Primary path: detect CKB auto-accept and track the channel to `ChannelReady`.
 - Fallback path: surface manual accept guidance when auto-accept is disabled or not triggered.
 - Build readiness logic around `open_channel` followed by channel-state inspection, not around assuming manual accept is always required.
+
+## 2026-06-27 Phase 3A
+
+Phase 3A after-channel payment proof:
+
+- A fresh active Fiber node setup was used for this payment proof after regenerating local test nodes for clean credential recovery.
+- node2 created a Fibt invoice for `100000000` shannons, which is `1 CKB`.
+- node1 paid the invoice.
+- payment hash: `0x1e8b2fa4509064801ca20c0922e5305dcdf5f57b080cc5c843abafc720ed0517`
+- `payment get_payment` on node1 returned `Success`.
+- `payment list_payments --status Success` included the payment.
+- `invoice get_invoice` on node2 showed the invoice as `Paid`.
+- No implementation was added.
+
+Verdict:
+
+- Phase 3A passed.
+- The ready reserve-aware channel can carry payment.
+- This does not yet prove the full before/after demo because the receiver already had a ready channel.
+
+Next phase:
+
+- Phase 3B
+- Prove a clean before/after flow:
+  1. receiver has no usable inbound path/channel
+  2. payment fails or readiness fails
+  3. reserve-aware channel coordination creates a usable path
+  4. same style payment succeeds after `ChannelReady`
