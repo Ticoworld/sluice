@@ -103,3 +103,34 @@ Attempt 3:
 - total time:
 - result:
 - errors:
+
+## 2026-06-27 Phase 2 timed reserve-aware probe
+
+Timed 499/99 reserve-aware probe:
+
+- open_channel started: `2026-06-27T03:13:31.2615783Z`
+- open_channel succeeded and returned temporary_channel_id:
+  `0x4057fa69f08df6f6a7310461df4990f565c043877363033a5a32ecffcf781c6a`
+- accept_channel started: `2026-06-27T03:14:17.0549747Z`
+- accept_channel errored:
+  `No channel with temp id Hash256(0x4057fa69f08df6f6a7310461df4990f565c043877363033a5a32ecffcf781c6a) found`
+- accept_channel did not return channel_id.
+- A live channel later appeared in list_channels:
+  `0xf4e8f98b3b5fd557025df1e36e85e27cf229c0bafce15639833557b880a6a99d`
+- ChannelReady observed:
+  - node2: `2026-06-27T03:14:44.0484303Z`
+  - node1: `2026-06-27T03:14:44.2019332Z`
+- final state:
+  - node1: ChannelReady
+  - node2: ChannelReady
+
+Durations:
+
+- open -> accept attempt: `45.7933964s`
+- accept attempt -> first ChannelReady observation: `26.9934556s`
+- open -> first ChannelReady observation: `72.7868520s`
+
+Verdict:
+
+- Phase 2 timing passes because ChannelReady was reached on both sides with a measured open-to-ready duration.
+- Important anomaly: manual accept_channel returned no-temp-id-found even though the channel still reached ChannelReady. This must be investigated before automating accept behavior.

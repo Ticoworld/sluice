@@ -31,3 +31,14 @@ Phase 2 status:
 
 - functional proof passed
 - exact timing capture pending
+
+## 2026-06-27 Phase 2 timing closed
+
+Timed reserve-aware channel probe reached ChannelReady on both nodes in `72.7868520s` (open_channel start to first ChannelReady observation).
+
+Decision:
+
+- Phase 2 is marked fully passed for timing.
+- Manual `accept_channel` returned `No channel with temp id ... found`, yet the channel still progressed to `ChannelReady` on both sides. This accept-path anomaly is logged as an open investigation item, not treated as a Phase 2 failure.
+- Before Phase 3 starts, inspect node1/node2 `config.yml` for auto-accept-related settings (read-only inspection, no edits) to understand why the channel became ready without a successful manual accept.
+- Product framing unchanged: Sluice is a reserve-aware JIT liquidity coordinator for Fiber.
