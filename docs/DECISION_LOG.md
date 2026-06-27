@@ -42,3 +42,21 @@ Decision:
 - Manual `accept_channel` returned `No channel with temp id ... found`, yet the channel still progressed to `ChannelReady` on both sides. This accept-path anomaly is logged as an open investigation item, not treated as a Phase 2 failure.
 - Before Phase 3 starts, inspect node1/node2 `config.yml` for auto-accept-related settings (read-only inspection, no edits) to understand why the channel became ready without a successful manual accept.
 - Product framing unchanged: Sluice is a reserve-aware JIT liquidity coordinator for Fiber.
+
+## 2026-06-27 Accept-path decision
+
+Finding:
+
+- `auto_accept_amount: 1000000000` is a UDT-only setting in Fiber source, not the CKB channel accept path.
+- Fiber CKB auto-accept is controlled separately by CKB channel auto-accept settings.
+- Official/public node docs describe the working CKB pattern as 499 CKB opener funding with 99 CKB reserve on each side, which matches the live reserve-aware probe.
+
+Conclusion:
+
+- The most likely explanation for the Phase 2 anomaly is that node2 auto-accepted the CKB channel before manual `accept_channel` was called, so the temp id was no longer present when the manual command ran.
+
+Sluice automation decision:
+
+- Primary path: support CKB auto-accept detection and `ChannelReady` tracking after `open_channel`.
+- Fallback path: support manual-accept guidance when auto-accept is disabled or does not trigger.
+- Phase 3 should not assume manual `accept_channel` is always required.

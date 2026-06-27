@@ -134,3 +134,22 @@ Verdict:
 
 - Phase 2 timing passes because ChannelReady was reached on both sides with a measured open-to-ready duration.
 - Important anomaly: manual accept_channel returned no-temp-id-found even though the channel still reached ChannelReady. This must be investigated before automating accept behavior.
+
+## 2026-06-27 Accept-path investigation
+
+Source-backed finding:
+
+- `auto_accept_amount: 1000000000` belongs to the UDT config path, not the CKB channel accept path.
+- CKB channel auto-accept is controlled separately by Fiber CKB auto-accept settings.
+- Official/public node docs describe the working CKB pattern as 499 CKB opener funding with 99 CKB reserve on each side, leaving about 400 CKB usable after reserve.
+
+Interpretation:
+
+- The best explanation for the Phase 2 anomaly is that node2 auto-accepted the CKB channel before manual `accept_channel` was called.
+- Manual `accept_channel` then failed because the temp id was already gone.
+
+Sluice decision:
+
+- Primary path: detect CKB auto-accept and track the channel to `ChannelReady`.
+- Fallback path: surface manual accept guidance when auto-accept is disabled or not triggered.
+- Build readiness logic around `open_channel` followed by channel-state inspection, not around assuming manual accept is always required.
