@@ -181,3 +181,44 @@ Next phase:
   2. payment fails or readiness fails
   3. reserve-aware channel coordination creates a usable path
   4. same style payment succeeds after `ChannelReady`
+
+## 2026-06-28 Phase 3B
+
+Clean before/after loop:
+
+- node4 was created as a fresh payer / service opener.
+- node3 was used as the receiver.
+- node4 RPC/P2P ports: `8257/8258`
+- node4 and node3 were connected as peers.
+- Before channel setup, both sides had no existing `ChannelReady` channel between them.
+- node3 created a 1 CKB Fibt invoice.
+- node4 attempted to pay before a usable channel existed.
+- before-payment failure string:
+  `Send payment error: Failed to build route, Insufficient balance: max outbound liquidity 0 is insufficient, required amount: 100000000`
+- node4 opened a reserve-aware channel to node3 with opener amount `12000000000` shannons, which is `120 CKB`.
+- node3 manually accepted with `9900000000` shannons, which is `99 CKB`.
+- open_channel temp id:
+  `0x1085f881557f63c4198b9675deefb072b7ed4cb181b1ec720e69f74cf6ae349a`
+- accepted channel id:
+  `0x03b8c8f33b0e98b8d3a9f19a6012d837299199f4b6ed765940ad38a7aa1100c9`
+- node4 channel state reached `ChannelReady`.
+- node3 channel state reached `ChannelReady`.
+- after-channel payment succeeded.
+- `payment get_payment` returned `Success`.
+- node3 `invoice get_invoice` showed `Paid`.
+- No implementation was added.
+
+Key learning:
+
+- 499 CKB is not required for this controlled manual-accept proof.
+- 120 CKB opener funding plus 99 CKB receiver funding was enough to create usable liquidity for a 1 CKB payment.
+- Sluice should calculate minimum viable reserve-aware channel amounts instead of blindly using the public-node 499 CKB pattern.
+- Sluice must distinguish total wallet balance from spendable funding capacity, because node1 had headline balance but failed funding tx construction due to spendable-cell constraints.
+- node4 was used as the clean opener after node1 showed opener-side spendable-capacity issues.
+
+Verdict:
+
+- Phase 3B passed.
+- The full before/after proof is now complete.
+- Cat 3 remains confirmed.
+- The product implementation can begin after the docs commit.

@@ -78,3 +78,16 @@ Decision:
 - The ready reserve-aware channel is confirmed as usable for real payment traffic.
 - The full before/after demo is still pending because this proof used an already-ready channel.
 - Next step is Phase 3B: prove the before state fails, then Sluice-style reserve-aware channel setup makes the same style payment succeed.
+
+## 2026-06-28 Phase 3B
+
+Decision:
+
+- Phase 3B is passed.
+- The clean before/after loop is complete.
+- node4 was used as the clean opener after node1 showed opener-side spendable-capacity issues.
+- 120 CKB opener funding plus 99 CKB receiver funding was enough to create usable liquidity for a 1 CKB payment.
+- Sluice should calculate minimum viable reserve-aware channel amounts instead of blindly using the public-node 499 CKB pattern.
+- Sluice must distinguish total wallet balance from spendable funding capacity.
+- Cat 3 remains confirmed.
+- Product implementation can begin after the docs commit.
