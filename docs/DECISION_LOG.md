@@ -111,3 +111,14 @@ Decision:
 - The CLI quote command works for both CKB and shannon inputs.
 - This phase stays pure: no channel opens, no payment sends, and no live Fiber RPC calls.
 - Next phase is payment readiness checking, not channel coordination yet.
+
+## 2026-07-03 Phase 6
+
+Decision:
+
+- Phase 6 is passed.
+- Sluice now has a read-only readiness checker that tells whether a receiver can be paid right now from the service node.
+- The checker reports readiness without faking liquidity: if the live channel fields are unclear, it can return `unknown`.
+- The live Phase 6 smoke case against node4/node3 returned `ready` from a real `ChannelReady` path with sufficient outbound liquidity.
+- The first `list_peers` view did not list the receiver, so readiness is based on actual channel state plus read liquidity, not on peer listing alone.
+- Next phase is reserve-aware channel coordination.

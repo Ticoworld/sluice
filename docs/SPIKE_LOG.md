@@ -269,3 +269,36 @@ Limitations:
 Next phase:
 
 - Phase 6, payment readiness checking.
+
+## 2026-07-03 Phase 6
+
+Readiness checker:
+
+- Implemented a read-only payment readiness checker that inspects service-node info, peers, and channels before any channel coordination happens.
+- Added conservative parsing for live Fiber channel state and liquidity fields so the checker returns `unknown` instead of faking liquidity when the field shape is unclear.
+- Added a CLI command: `readiness --service node4 --receiver-pubkey <pubkey> --amount-ckb 1`.
+- The checker uses the Phase 5 reserve-aware quote engine to recommend the minimum viable channel plan.
+
+Validation:
+
+- `npx tsc --noEmit` passed.
+- `npx vitest run` passed for 4 files and 20 tests.
+- Live smoke call against node4/node3 passed with no crash.
+- Live readiness output for the Phase 6 proof case returned:
+  - `receiver_reachable: true`
+  - `peer_connected: false`
+  - `channel_ready: true`
+  - `outbound_liquidity_sufficient: true`
+  - `readiness_status: ready`
+  - reason: payment is ready because a ChannelReady path exists and outbound liquidity covers the target payment
+- Live channel liquidity was parsed from the Fiber response as a clearly-present hex balance field, not guessed.
+
+Limitations:
+
+- Phase 6 is still read-only.
+- It does not open channels, send payments, or create invoices.
+- It does not build a dashboard or database.
+
+Next phase:
+
+- Phase 7, reserve-aware channel coordination.
