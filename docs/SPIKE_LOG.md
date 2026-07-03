@@ -236,3 +236,36 @@ Typed Fiber RPC client foundation:
 Next phase:
 
 - Phase 5, reserve-aware channel requirement calculation, building on this typed client.
+
+## 2026-07-03 Phase 5
+
+Reserve-aware quote engine:
+
+- Implemented a pure reserve-aware quote engine with exact CKB/shannon conversion helpers.
+- Added the default accept-side reserve of `9900000000` shannons, which is `99 CKB`.
+- Added quote calculation for a target payment amount and exposed it through the CLI.
+- Added `quote --amount-ckb 1` and `quote --amount-shannons 100000000` support.
+- For the 1 CKB proof case, the quote returns:
+  - target payment: `100000000` shannons, `1 CKB`
+  - receiver reserve required: `9900000000` shannons, `99 CKB`
+  - receiver accept funding: `9900000000` shannons, `99 CKB`
+  - fee/headroom: `2000000000` shannons, `20 CKB`
+  - minimum opener funding: `12000000000` shannons, `120 CKB`
+  - estimated usable liquidity: `2100000000` shannons, `21 CKB`
+
+Validation:
+
+- `npx tsc --noEmit` passed.
+- `npx vitest run` passed for 3 files and 15 tests.
+- `npx tsx src/index.ts quote --amount-ckb 1` passed.
+- `npx tsx src/index.ts quote --amount-shannons 100000000` passed.
+
+Limitations:
+
+- Phase 5 does not open channels, send payments, or call live Fiber nodes.
+- Quote policy is conservative and testnet-oriented.
+- Production fee policy, dynamic cell selection, and real LSP pricing remain future work.
+
+Next phase:
+
+- Phase 6, payment readiness checking.

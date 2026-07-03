@@ -100,3 +100,14 @@ Decision:
 - Live smoke test against node3/node4 passed for `node-info`, `peers`, and `channels` on both nodes.
 - The `list_channels` client needed the live Fiber wire shape `{ params: {...} }`, and the client now matches that shape.
 - This closes the live compatibility check for the typed RPC foundation.
+
+## 2026-07-03 Phase 5
+
+Decision:
+
+- Phase 5 is passed.
+- The first core Sluice product primitive is now the reserve-aware quote engine.
+- The engine uses exact CKB/shannon conversion helpers and the proven 99 CKB accept-side reserve from the Phase 3B manual flow.
+- The CLI quote command works for both CKB and shannon inputs.
+- This phase stays pure: no channel opens, no payment sends, and no live Fiber RPC calls.
+- Next phase is payment readiness checking, not channel coordination yet.
