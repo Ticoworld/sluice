@@ -91,3 +91,12 @@ Decision:
 - Sluice must distinguish total wallet balance from spendable funding capacity.
 - Cat 3 remains confirmed.
 - Product implementation can begin after the docs commit.
+
+## 2026-07-03 Phase 4
+
+Decision:
+
+- Typed Fiber RPC client foundation is passed.
+- Live smoke test against node3/node4 passed for `node-info`, `peers`, and `channels` on both nodes.
+- The `list_channels` client needed the live Fiber wire shape `{ params: {...} }`, and the client now matches that shape.
+- This closes the live compatibility check for the typed RPC foundation.

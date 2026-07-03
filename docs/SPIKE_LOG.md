@@ -222,3 +222,17 @@ Verdict:
 - The full before/after proof is now complete.
 - Cat 3 remains confirmed.
 - The product implementation can begin after the docs commit.
+
+## 2026-07-03 Phase 4
+
+Typed Fiber RPC client foundation:
+
+- Added `FiberRpcClient` (`src/rpc/client.ts`) wrapping `node_info`, `list_peers`, and `list_channels` over JSON-RPC 2.0, with zod-validated response shapes (`src/rpc/types.ts`).
+- Added named node config (`src/config.ts`) for `node3` (receiver, `http://127.0.0.1:8247`) and `node4` (service opener, `http://127.0.0.1:8257`), overridable via `SLUICE_<NODE>_RPC_URL` env vars, no secrets involved.
+- Added a CLI (`src/cli.ts`, wired through `src/index.ts`) with `node-info <node>`, `peers <node>`, and `channels <node>` commands.
+- Tests use a mocked `fetch`, not live Fiber nodes: `npx vitest run` passed 9/9.
+- Live smoke test against node3/node4 passed for `node-info`, `peers`, and `channels` on both nodes.
+
+Next phase:
+
+- Phase 5, reserve-aware channel requirement calculation, building on this typed client.
