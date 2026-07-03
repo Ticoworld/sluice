@@ -1,4 +1,5 @@
 import { Command } from "commander";
+import { prepareInboundChannel } from "./core/coordinator.js";
 import { buildReserveAwareQuote, formatReserveAwareQuote } from "./core/quote.js";
 import { ckbToShannons, parseShannons } from "./core/reserve.js";
 import { evaluateReadiness } from "./core/readiness.js";
@@ -94,6 +95,68 @@ export function buildCli(): Command {
         receiverPubkey: options.receiverPubkey,
         targetPaymentShannons,
       });
+
+      console.log(JSON.stringify(result, null, 2));
+    });
+
+  program
+    .command("prepare-inbound")
+    .description("Plan or execute reserve-aware inbound channel preparation")
+    .requiredOption("--service <node>", "configured service node name (e.g. node4)")
+    .option("--receiver <node>", "configured receiver node name (e.g. node3)")
+    .option("--receiver-pubkey <pubkey>", "receiver pubkey to inspect or target")
+    .option("--amount-ckb <amount>", "target payment amount in CKB")
+    .option("--amount-shannons <amount>", "target payment amount in shannons")
+    .option("--execute", "allow live channel mutation")
+    .option("--yes", "alias for --execute")
+    .option("--timeout-ms <ms>", "execution timeout in milliseconds", (value) => Number(value))
+    .option("--poll-interval-ms <ms>", "poll interval in milliseconds", (value) => Number(value))
+    .action(async (options: {
+      service: string;
+      receiver?: string;
+      receiverPubkey?: string;
+      amountCkb?: string;
+      amountShannons?: string;
+      execute?: boolean;
+      yes?: boolean;
+      timeoutMs?: number;
+      pollIntervalMs?: number;
+    }) => {
+      const targetPaymentShannons = parseTargetPaymentShannons({
+        amountCkb: options.amountCkb,
+        amountShannons: options.amountShannons,
+      });
+
+      const receiverNode = options.receiver;
+      const receiverClient = receiverNode ? clientFor(receiverNode) : undefined;
+      const serviceClient = clientFor(options.service);
+      const shouldExecute = Boolean(options.execute || options.yes);
+
+      if (!options.receiverPubkey && !receiverClient) {
+        program.error("Provide --receiver or --receiver-pubkey.");
+      }
+
+      if (shouldExecute && !receiverClient) {
+        program.error("Live execution requires --receiver so the receiver node can be polled and accept the channel if needed.");
+      }
+
+      const result = await prepareInboundChannel(
+        {
+          service: serviceClient,
+          receiver: receiverClient,
+        },
+        {
+          serviceNode: options.service,
+          receiverNode,
+          receiverPubkey: options.receiverPubkey,
+          targetPaymentShannons,
+        },
+        {
+          execute: shouldExecute,
+          timeoutMs: options.timeoutMs,
+          pollIntervalMs: options.pollIntervalMs,
+        },
+      );
 
       console.log(JSON.stringify(result, null, 2));
     });

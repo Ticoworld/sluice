@@ -302,3 +302,34 @@ Limitations:
 Next phase:
 
 - Phase 7, reserve-aware channel coordination.
+
+## 2026-07-04 Phase 7A
+
+Coordinator foundation:
+
+- Implemented a reserve-aware channel coordinator foundation that stays dry-run by default.
+- Added typed `open_channel` and `accept_channel` RPC methods plus a `prepare-inbound` CLI command.
+- The CLI only mutates live Fiber state when `--execute` or `--yes` is explicitly provided.
+- The coordinator reuses the Phase 5 quote engine and Phase 6 readiness checker.
+
+Validation:
+
+- `npx tsc --noEmit` passed.
+- `npx vitest run` passed for 5 files and 29 tests.
+- Live dry-run smoke command passed without mutation:
+  - `npx tsx src/index.ts prepare-inbound --service node4 --receiver node3 --amount-ckb 1`
+- Dry-run output reported:
+  - mode: `dry-run`
+  - readiness satisfied: `true`
+  - planned steps: do not open a new channel; retry payment on the existing `ChannelReady` path
+- No live mutating `open_channel` or `accept_channel` command was run in this phase.
+
+Limitations:
+
+- The execution path is still mocked and unit-tested only.
+- Phase 7A does not claim live channel creation success yet.
+- The coordinator is ready for an explicit live `--execute` test in the next phase.
+
+Next phase:
+
+- Phase 7B, explicit live channel execution smoke test.

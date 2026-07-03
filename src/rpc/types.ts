@@ -6,6 +6,7 @@ import { z } from "zod";
  * value rather than guessing a conversion.
  */
 const numericLike = z.union([z.string(), z.number()]);
+const fundingLike = z.union([numericLike, z.bigint()]);
 
 export const nodeInfoSchema = z
   .object({
@@ -92,3 +93,41 @@ export const listChannelsResultSchema = z
   .passthrough();
 
 export type ListChannelsResult = z.infer<typeof listChannelsResultSchema>;
+
+export const openChannelParamsSchema = z
+  .object({
+    pubkey: z.string(),
+    funding_amount: fundingLike,
+    public: z.boolean().optional(),
+    one_way: z.boolean().optional(),
+  })
+  .passthrough();
+
+export type OpenChannelParams = z.infer<typeof openChannelParamsSchema>;
+
+export const openChannelResultSchema = z
+  .object({
+    temporary_channel_id: z.string().optional(),
+    channel_id: z.string().optional(),
+  })
+  .passthrough();
+
+export type OpenChannelResult = z.infer<typeof openChannelResultSchema>;
+
+export const acceptChannelParamsSchema = z
+  .object({
+    temporary_channel_id: z.string(),
+    funding_amount: fundingLike,
+  })
+  .passthrough();
+
+export type AcceptChannelParams = z.infer<typeof acceptChannelParamsSchema>;
+
+export const acceptChannelResultSchema = z
+  .object({
+    channel_id: z.string().optional(),
+    temporary_channel_id: z.string().optional(),
+  })
+  .passthrough();
+
+export type AcceptChannelResult = z.infer<typeof acceptChannelResultSchema>;

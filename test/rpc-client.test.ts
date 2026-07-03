@@ -105,6 +105,52 @@ describe("FiberRpcClient", () => {
     );
   });
 
+  it("sends an open_channel request with serialized funding amount", async () => {
+    const fetchImpl = mockFetchOnce({
+      jsonrpc: "2.0",
+      id: 1,
+      result: { temporary_channel_id: "0xtemp" },
+    });
+
+    const client = new FiberRpcClient({ url: RPC_URL, fetchImpl });
+    const result = await client.openChannel({
+      pubkey: "02abc",
+      funding_amount: 12_000_000_000n,
+      public: false,
+      one_way: false,
+    });
+
+    expect(result.temporary_channel_id).toBe("0xtemp");
+    expect(fetchImpl).toHaveBeenCalledWith(
+      RPC_URL,
+      expect.objectContaining({
+        body: expect.stringContaining('"method":"open_channel"'),
+      }),
+    );
+  });
+
+  it("sends an accept_channel request with serialized funding amount", async () => {
+    const fetchImpl = mockFetchOnce({
+      jsonrpc: "2.0",
+      id: 1,
+      result: { channel_id: "0xchannel" },
+    });
+
+    const client = new FiberRpcClient({ url: RPC_URL, fetchImpl });
+    const result = await client.acceptChannel({
+      temporary_channel_id: "0xtemp",
+      funding_amount: 9_900_000_000n,
+    });
+
+    expect(result.channel_id).toBe("0xchannel");
+    expect(fetchImpl).toHaveBeenCalledWith(
+      RPC_URL,
+      expect.objectContaining({
+        body: expect.stringContaining('"method":"accept_channel"'),
+      }),
+    );
+  });
+
   it("throws FiberRpcError on a JSON-RPC error response", async () => {
     const fetchImpl = mockFetchOnce({
       jsonrpc: "2.0",

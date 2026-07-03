@@ -122,3 +122,15 @@ Decision:
 - The live Phase 6 smoke case against node4/node3 returned `ready` from a real `ChannelReady` path with sufficient outbound liquidity.
 - The first `list_peers` view did not list the receiver, so readiness is based on actual channel state plus read liquidity, not on peer listing alone.
 - Next phase is reserve-aware channel coordination.
+
+## 2026-07-04 Phase 7A
+
+Decision:
+
+- Phase 7A foundation is passed.
+- Sluice now has a reserve-aware channel coordinator that is dry-run by default and requires explicit `--execute` or `--yes` to mutate live Fiber state.
+- The coordinator uses the Phase 5 quote engine and Phase 6 readiness checker to produce a no-op plan when the receiver is already ready.
+- Typed `open_channel` and `accept_channel` RPC methods are now available for the coordinator path.
+- The live smoke was read-only only; no mutating channel command was run in this phase.
+- The live execute path remains an explicit next-step smoke test, not yet a proven production path.
+- Next phase is explicit live channel execution smoke testing.

@@ -1,13 +1,21 @@
 import type { z } from "zod";
 import {
+  acceptChannelParamsSchema,
+  acceptChannelResultSchema,
   listChannelsParamsSchema,
   listChannelsResultSchema,
   listPeersResultSchema,
   nodeInfoSchema,
+  openChannelParamsSchema,
+  openChannelResultSchema,
+  type AcceptChannelParams,
+  type AcceptChannelResult,
   type ListChannelsParams,
   type ListChannelsResult,
   type ListPeersResult,
   type NodeInfo,
+  type OpenChannelParams,
+  type OpenChannelResult,
 } from "./types.js";
 
 interface JsonRpcRequest {
@@ -68,7 +76,7 @@ export class FiberRpcClient {
     const response = await this.fetchImpl(this.url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(request),
+      body: JSON.stringify(request, (_key, value) => (typeof value === "bigint" ? value.toString() : value)),
     });
 
     if (!response.ok) {
@@ -95,5 +103,19 @@ export class FiberRpcClient {
   listChannels(params: ListChannelsParams = {}): Promise<ListChannelsResult> {
     const validParams = listChannelsParamsSchema.parse(params);
     return this.call("list_channels", { params: validParams }, listChannelsResultSchema);
+  }
+
+  listPendingChannels(params: Omit<ListChannelsParams, "only_pending"> = {}): Promise<ListChannelsResult> {
+    return this.listChannels({ ...params, only_pending: true });
+  }
+
+  openChannel(params: OpenChannelParams): Promise<OpenChannelResult> {
+    const validParams = openChannelParamsSchema.parse(params);
+    return this.call("open_channel", validParams, openChannelResultSchema);
+  }
+
+  acceptChannel(params: AcceptChannelParams): Promise<AcceptChannelResult> {
+    const validParams = acceptChannelParamsSchema.parse(params);
+    return this.call("accept_channel", validParams, acceptChannelResultSchema);
   }
 }

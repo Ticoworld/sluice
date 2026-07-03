@@ -1,0 +1,394 @@
+import { FiberRpcError } from "../rpc/client.js";
+import type {
+  AcceptChannelResult,
+  Channel,
+  ListChannelsResult,
+  ListPeersResult,
+  NodeInfo,
+  OpenChannelResult,
+} from "../rpc/types.js";
+import { buildReserveAwareQuote, type PrintableQuoteAmount } from "./quote.js";
+import { formatCkbAmount } from "./reserve.js";
+import { evaluateReadiness, type ReadinessCheckResult } from "./readiness.js";
+
+export type CoordinatorMode = "dry-run" | "execute";
+export type CoordinatorStatus = "ready" | "timeout" | "funding_aborted" | "rpc_error";
+
+export interface CoordinatorInput {
+  serviceNode: string;
+  receiverNode?: string;
+  receiverPubkey?: string;
+  targetPaymentShannons: bigint;
+}
+
+export interface CoordinatorOptions {
+  execute?: boolean;
+  timeoutMs?: number;
+  pollIntervalMs?: number;
+}
+
+export interface CoordinatorPlan {
+  service_node: string;
+  receiver_node?: string;
+  receiver_pubkey: string;
+  target_payment: PrintableQuoteAmount;
+  opener_funding: PrintableQuoteAmount;
+  receiver_accept_funding: PrintableQuoteAmount;
+  readiness_satisfied: boolean;
+  planned_steps: string[];
+  readiness: ReadinessCheckResult;
+}
+
+export interface CoordinatorExecutionResult {
+  status: CoordinatorStatus;
+  reason: string;
+  temporary_channel_id?: string;
+  channel_id?: string;
+  manual_accept_attempted: boolean;
+  manual_accept_error?: string;
+}
+
+export interface CoordinatorResult {
+  mode: CoordinatorMode;
+  plan: CoordinatorPlan;
+  execution?: CoordinatorExecutionResult;
+}
+
+export interface CoordinatorClient {
+  nodeInfo(): Promise<NodeInfo>;
+  listPeers(): Promise<ListPeersResult>;
+  listChannels(params?: Record<string, unknown>): Promise<ListChannelsResult>;
+  listPendingChannels?(params?: Record<string, unknown>): Promise<ListChannelsResult>;
+  openChannel?(params: Record<string, unknown>): Promise<OpenChannelResult>;
+  acceptChannel?(params: Record<string, unknown>): Promise<AcceptChannelResult>;
+}
+
+export interface CoordinatorClients {
+  service: CoordinatorClient;
+  receiver?: CoordinatorClient;
+}
+
+export interface CoordinatorRuntime {
+  now(): number;
+  sleep(ms: number): Promise<void>;
+}
+
+const DEFAULT_TIMEOUT_MS = 45_000;
+const DEFAULT_POLL_INTERVAL_MS = 2_000;
+
+const defaultRuntime: CoordinatorRuntime = {
+  now: () => Date.now(),
+  sleep: (ms: number) => new Promise((resolve) => setTimeout(resolve, ms)),
+};
+
+function printableAmount(shannons: bigint): PrintableQuoteAmount {
+  return {
+    shannons: shannons.toString(),
+    ckb: formatCkbAmount(shannons),
+  };
+}
+
+function normalizeStateName(state: unknown): string | undefined {
+  if (typeof state === "string") {
+    return state;
+  }
+
+  if (state && typeof state === "object") {
+    const candidate = state as Record<string, unknown>;
+    const raw =
+      candidate.state_name ??
+      candidate.stateName ??
+      candidate.name ??
+      candidate.status ??
+      candidate.state;
+
+    if (typeof raw === "string") {
+      return raw;
+    }
+  }
+
+  return undefined;
+}
+
+function channelCounterparty(channel: Channel): string | undefined {
+  return typeof channel.pubkey === "string" ? channel.pubkey : undefined;
+}
+
+function isChannelReady(channel: Channel): boolean {
+  const stateName = normalizeStateName(channel.state);
+  return stateName !== undefined && stateName.toLowerCase().includes("channelready");
+}
+
+function isFundingAborted(channel: Channel): boolean {
+  const stateName = normalizeStateName(channel.state)?.toLowerCase() ?? "";
+  const failureDetail = channel.failure_detail?.toLowerCase() ?? "";
+
+  return (
+    stateName.includes("fundingaborted") ||
+    stateName.includes("funding_aborted") ||
+    stateName.includes("aborted") ||
+    failureDetail.includes("aborted") ||
+    failureDetail.includes("abort") ||
+    failureDetail.includes("funding")
+  );
+}
+
+function findChannelByCounterparty(channels: Channel[], counterpartyPubkey: string): Channel | undefined {
+  return channels.find((channel) => channelCounterparty(channel) === counterpartyPubkey);
+}
+
+function findPendingTempId(channels: Channel[], expectedTempId?: string): string | undefined {
+  const matching = expectedTempId
+    ? channels.find((channel) => channel.channel_id === expectedTempId)
+    : undefined;
+
+  return matching?.channel_id ?? channels[0]?.channel_id;
+}
+
+async function resolveReceiverPubkey(
+  receiverClient: CoordinatorClient | undefined,
+  receiverPubkey: string | undefined,
+): Promise<string> {
+  if (receiverPubkey) {
+    return receiverPubkey;
+  }
+
+  if (!receiverClient) {
+    throw new Error("Receiver pubkey is required when no receiver node is provided.");
+  }
+
+  const info = await receiverClient.nodeInfo();
+  return info.pubkey;
+}
+
+function planSteps(readiness: ReadinessCheckResult): string[] {
+  if (readiness.readiness_status === "ready") {
+    return [
+      "receiver is already ready",
+      "no new channel should be opened",
+      "retry the payment with the existing ChannelReady path",
+    ];
+  }
+
+  return [
+    "open reserve-aware channel from the service node to the receiver",
+    "watch the receiver pending channel list for the live temporary channel id",
+    "accept the pending channel from the receiver side if it appears",
+    "poll both nodes until ChannelReady or a clear failure state appears",
+  ];
+}
+
+function emptyExecution(status: CoordinatorStatus, reason: string): CoordinatorExecutionResult {
+  return {
+    status,
+    reason,
+    manual_accept_attempted: false,
+  };
+}
+
+export async function prepareInboundChannel(
+  clients: CoordinatorClients,
+  input: CoordinatorInput,
+  options: CoordinatorOptions = {},
+  runtime: CoordinatorRuntime = defaultRuntime,
+): Promise<CoordinatorResult> {
+  const serviceNodeInfo = await clients.service.nodeInfo();
+  const receiverPubkey = await resolveReceiverPubkey(clients.receiver, input.receiverPubkey);
+  const quote = buildReserveAwareQuote({ targetPaymentShannons: input.targetPaymentShannons });
+  const readiness = await evaluateReadiness(clients.service, {
+    serviceNode: input.serviceNode,
+    receiverPubkey,
+    targetPaymentShannons: input.targetPaymentShannons,
+  });
+
+  const plan: CoordinatorPlan = {
+    service_node: input.serviceNode,
+    receiver_node: input.receiverNode,
+    receiver_pubkey: receiverPubkey,
+    target_payment: printableAmount(input.targetPaymentShannons),
+    opener_funding: printableAmount(quote.recommendedOpenerFundingShannons),
+    receiver_accept_funding: printableAmount(quote.receiverAcceptFundingShannons),
+    readiness_satisfied: readiness.readiness_status === "ready",
+    planned_steps: planSteps(readiness),
+    readiness: {
+      ...readiness,
+      service_node_pubkey: readiness.service_node_pubkey ?? serviceNodeInfo.pubkey,
+    },
+  };
+
+  if (!options.execute) {
+    return {
+      mode: "dry-run",
+      plan,
+    };
+  }
+
+  const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+  const pollIntervalMs = options.pollIntervalMs ?? DEFAULT_POLL_INTERVAL_MS;
+  const deadline = runtime.now() + timeoutMs;
+
+  if (plan.readiness_satisfied) {
+    return {
+      mode: "execute",
+      plan,
+      execution: emptyExecution("ready", "Payment readiness was already satisfied. No channel was opened."),
+    };
+  }
+
+  if (!clients.receiver || !input.receiverNode) {
+    return {
+      mode: "execute",
+      plan,
+      execution: emptyExecution(
+        "rpc_error",
+        "Execution requires a receiver node so the coordinator can watch receiver pending channels and perform a manual accept if needed.",
+      ),
+    };
+  }
+
+  const servicePubkey = plan.readiness.service_node_pubkey ?? serviceNodeInfo.pubkey;
+
+  if (!clients.service.openChannel || !clients.receiver.acceptChannel) {
+    return {
+      mode: "execute",
+      plan,
+      execution: emptyExecution(
+        "rpc_error",
+        "Execution requires channel mutation methods on both the service and receiver clients.",
+      ),
+    };
+  }
+
+  let temporaryChannelId: string | undefined;
+  let channelId: string | undefined;
+  let manualAcceptAttempted = false;
+  let manualAcceptError: string | undefined;
+
+  try {
+    const openResult = await clients.service.openChannel({
+      pubkey: receiverPubkey,
+      funding_amount: quote.recommendedOpenerFundingShannons,
+      public: false,
+      one_way: false,
+    });
+
+    temporaryChannelId = openResult.temporary_channel_id ?? openResult.channel_id;
+
+    if (!temporaryChannelId) {
+      return {
+        mode: "execute",
+        plan,
+        execution: emptyExecution(
+          "rpc_error",
+          "open_channel did not return a temporary channel id that could be tracked.",
+        ),
+      };
+    }
+
+    while (runtime.now() < deadline) {
+      const pendingList = await (clients.receiver.listPendingChannels
+        ? clients.receiver.listPendingChannels({ pubkey: servicePubkey })
+        : clients.receiver.listChannels({ pubkey: servicePubkey, only_pending: true }));
+
+      const pendingTempId = findPendingTempId(pendingList.channels, temporaryChannelId);
+      if (pendingTempId && !manualAcceptAttempted) {
+        manualAcceptAttempted = true;
+        try {
+          const acceptResult = await clients.receiver.acceptChannel({
+            temporary_channel_id: pendingTempId,
+            funding_amount: quote.receiverAcceptFundingShannons,
+          });
+          channelId = acceptResult.channel_id ?? channelId;
+        } catch (error) {
+          manualAcceptError = error instanceof Error ? error.message : String(error);
+        }
+      }
+
+      const serviceChannels = await clients.service.listChannels({ pubkey: receiverPubkey, include_closed: true });
+      const receiverChannels = await clients.receiver.listChannels({ pubkey: servicePubkey, include_closed: true });
+
+      const serviceChannel = findChannelByCounterparty(serviceChannels.channels, receiverPubkey);
+      const receiverChannel = findChannelByCounterparty(receiverChannels.channels, servicePubkey);
+
+      if (serviceChannel && isFundingAborted(serviceChannel)) {
+        return {
+          mode: "execute",
+          plan,
+          execution: {
+            status: "funding_aborted",
+            reason: "Service-side channel entered a funding-aborted or closed state.",
+            temporary_channel_id: temporaryChannelId,
+            channel_id: channelId,
+            manual_accept_attempted: manualAcceptAttempted,
+            manual_accept_error: manualAcceptError,
+          },
+        };
+      }
+
+      if (receiverChannel && isFundingAborted(receiverChannel)) {
+        return {
+          mode: "execute",
+          plan,
+          execution: {
+            status: "funding_aborted",
+            reason: "Receiver-side channel entered a funding-aborted or closed state.",
+            temporary_channel_id: temporaryChannelId,
+            channel_id: channelId,
+            manual_accept_attempted: manualAcceptAttempted,
+            manual_accept_error: manualAcceptError,
+          },
+        };
+      }
+
+      if (serviceChannel && receiverChannel && isChannelReady(serviceChannel) && isChannelReady(receiverChannel)) {
+        return {
+          mode: "execute",
+          plan,
+          execution: {
+            status: "ready",
+            reason: "ChannelReady was observed on both service and receiver nodes.",
+            temporary_channel_id: temporaryChannelId,
+            channel_id: channelId ?? serviceChannel.channel_id,
+            manual_accept_attempted: manualAcceptAttempted,
+            manual_accept_error: manualAcceptError,
+          },
+        };
+      }
+
+      await runtime.sleep(pollIntervalMs);
+    }
+
+    return {
+      mode: "execute",
+      plan,
+      execution: {
+        status: "timeout",
+        reason: "Timed out while waiting for ChannelReady or a clear failure state.",
+        temporary_channel_id: temporaryChannelId,
+        channel_id: channelId,
+        manual_accept_attempted: manualAcceptAttempted,
+        manual_accept_error: manualAcceptError,
+      },
+    };
+  } catch (error) {
+    const message =
+      error instanceof FiberRpcError
+        ? error.message
+        : error instanceof Error
+          ? error.message
+          : String(error);
+
+    return {
+      mode: "execute",
+      plan,
+      execution: {
+        status: "rpc_error",
+        reason: message,
+        temporary_channel_id: temporaryChannelId,
+        channel_id: channelId,
+        manual_accept_attempted: manualAcceptAttempted,
+        manual_accept_error: manualAcceptError,
+      },
+    };
+  }
+}
