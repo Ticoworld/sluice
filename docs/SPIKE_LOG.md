@@ -333,3 +333,46 @@ Limitations:
 Next phase:
 
 - Phase 7B, explicit live channel execution smoke test.
+
+## 2026-07-04 Phase 7B prep
+
+Environment and node setup:
+
+- Verified env-backed node resolution for `node5` via `SLUICE_NODE5_RPC_URL=http://127.0.0.1:8267`.
+- Created a fresh `sluice-node5` receiver with RPC `8267` and P2P `8268`.
+- Node5 `node_info` succeeded and reported `auto_accept_channel_ckb_funding_amount: 0x0`.
+- Node5 had no peers and no channels before the Phase 7B prep run.
+- Node4 was connected to node5 as a peer.
+- Node4 and node5 had no existing `ChannelReady` channel between them before the dry-run.
+
+Dry-run coordinator evidence:
+
+- `npx tsx src/index.ts prepare-inbound --service node4 --receiver node5 --amount-ckb 1`
+- Dry-run mode remained read-only and did not call `open_channel` or `accept_channel`.
+- Readiness output reported `receiver_reachable: true`.
+- Readiness output reported `peer_connected: true`.
+- Readiness output reported `channel_ready: false`.
+- Readiness output reported `outbound_liquidity_sufficient: false`.
+- Readiness output reported `readiness_status: not_ready`.
+- Recommended quote output reported:
+  - target payment: `1 CKB`
+  - receiver reserve requirement: `99 CKB`
+  - receiver accept funding: `99 CKB`
+  - fee headroom: `20 CKB`
+  - minimum opener funding: `120 CKB`
+  - estimated usable liquidity: `21 CKB`
+- Planned steps were the expected reserve-aware path: open channel, watch pending receiver temp id, accept from receiver side if needed, and poll until `ChannelReady`.
+
+Validation:
+
+- `npx tsc --noEmit` passed.
+- `npx vitest run` passed.
+
+Limitations:
+
+- No live `--execute` coordinator run has been performed yet.
+- Node5 balance was not re-verified through local CKB RPC in this environment during the prep step.
+
+Next phase:
+
+- Phase 7B live execute smoke test against node4 and node5.

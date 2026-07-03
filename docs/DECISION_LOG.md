@@ -134,3 +134,14 @@ Decision:
 - The live smoke was read-only only; no mutating channel command was run in this phase.
 - The live execute path remains an explicit next-step smoke test, not yet a proven production path.
 - Next phase is explicit live channel execution smoke testing.
+
+## 2026-07-04 Phase 7B prep
+
+Decision:
+
+- Phase 7B prep is complete enough to proceed to a live execute smoke test after the remaining node5 funding check is satisfied.
+- Env-backed node resolution already supports `node5` via `SLUICE_NODE5_RPC_URL`, so no special hardcoded config change was needed.
+- A fresh `node5` receiver was created and verified as fresh, with auto-accept disabled and no pre-existing `ChannelReady` path to node4.
+- Node4 was connected to node5 and the coordinator dry-run reported the expected reserve-aware 120 CKB opener / 99 CKB receiver plan.
+- The dry-run remained read-only, reported `not_ready`, and did not mutate live Fiber state.
+- No live `--execute` run has occurred yet, so Phase 7B live execution is still pending.
