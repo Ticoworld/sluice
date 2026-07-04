@@ -12,7 +12,7 @@ import { formatCkbAmount } from "./reserve.js";
 import { evaluateReadiness, type ReadinessCheckResult } from "./readiness.js";
 
 export type CoordinatorMode = "dry-run" | "execute";
-export type CoordinatorStatus = "ready" | "timeout" | "funding_aborted" | "rpc_error";
+export type CoordinatorStatus = "ready" | "timeout_not_ready" | "funding_aborted" | "rpc_error";
 
 export interface CoordinatorInput {
   serviceNode: string;
@@ -73,7 +73,7 @@ export interface CoordinatorRuntime {
   sleep(ms: number): Promise<void>;
 }
 
-const DEFAULT_TIMEOUT_MS = 45_000;
+const DEFAULT_TIMEOUT_MS = 180_000;
 const DEFAULT_POLL_INTERVAL_MS = 2_000;
 
 const defaultRuntime: CoordinatorRuntime = {
@@ -186,6 +186,65 @@ function emptyExecution(status: CoordinatorStatus, reason: string): CoordinatorE
   };
 }
 
+interface ExecutionState {
+  temporaryChannelId?: string;
+  channelId?: string;
+  manualAcceptAttempted: boolean;
+  manualAcceptError?: string;
+}
+
+function buildExecutionResult(
+  status: CoordinatorStatus,
+  reason: string,
+  state: ExecutionState,
+): CoordinatorExecutionResult {
+  return {
+    status,
+    reason,
+    temporary_channel_id: state.temporaryChannelId,
+    channel_id: state.channelId,
+    manual_accept_attempted: state.manualAcceptAttempted,
+    manual_accept_error: state.manualAcceptError,
+  };
+}
+
+function inspectExecutionState(
+  serviceChannels: ListChannelsResult,
+  receiverChannels: ListChannelsResult,
+  receiverPubkey: string,
+  servicePubkey: string,
+  state: ExecutionState,
+  readyReason: string,
+): CoordinatorExecutionResult | null {
+  const serviceChannel = findChannelByCounterparty(serviceChannels.channels, receiverPubkey);
+  const receiverChannel = findChannelByCounterparty(receiverChannels.channels, servicePubkey);
+
+  if (serviceChannel && isFundingAborted(serviceChannel)) {
+    return buildExecutionResult(
+      "funding_aborted",
+      "Service-side channel entered a funding-aborted or closed state.",
+      state,
+    );
+  }
+
+  if (receiverChannel && isFundingAborted(receiverChannel)) {
+    return buildExecutionResult(
+      "funding_aborted",
+      "Receiver-side channel entered a funding-aborted or closed state.",
+      state,
+    );
+  }
+
+  if (serviceChannel && receiverChannel && isChannelReady(serviceChannel) && isChannelReady(receiverChannel)) {
+    return buildExecutionResult("ready", readyReason, {
+      ...state,
+      channelId: state.channelId ?? serviceChannel.channel_id,
+    });
+  }
+
+  return null;
+}
+
 export async function prepareInboundChannel(
   clients: CoordinatorClients,
   input: CoordinatorInput,
@@ -259,10 +318,12 @@ export async function prepareInboundChannel(
     };
   }
 
-  let temporaryChannelId: string | undefined;
-  let channelId: string | undefined;
-  let manualAcceptAttempted = false;
-  let manualAcceptError: string | undefined;
+  const state: ExecutionState = {
+    temporaryChannelId: undefined,
+    channelId: undefined,
+    manualAcceptAttempted: false,
+    manualAcceptError: undefined,
+  };
 
   try {
     const openResult = await clients.service.openChannel({
@@ -272,9 +333,9 @@ export async function prepareInboundChannel(
       one_way: false,
     });
 
-    temporaryChannelId = openResult.temporary_channel_id ?? openResult.channel_id;
+    state.temporaryChannelId = openResult.temporary_channel_id ?? openResult.channel_id;
 
-    if (!temporaryChannelId) {
+    if (!state.temporaryChannelId) {
       return {
         mode: "execute",
         plan,
@@ -290,84 +351,74 @@ export async function prepareInboundChannel(
         ? clients.receiver.listPendingChannels({ pubkey: servicePubkey })
         : clients.receiver.listChannels({ pubkey: servicePubkey, only_pending: true }));
 
-      const pendingTempId = findPendingTempId(pendingList.channels, temporaryChannelId);
-      if (pendingTempId && !manualAcceptAttempted) {
-        manualAcceptAttempted = true;
+      const pendingTempId = findPendingTempId(pendingList.channels, state.temporaryChannelId);
+      if (pendingTempId && !state.manualAcceptAttempted) {
+        state.manualAcceptAttempted = true;
         try {
           const acceptResult = await clients.receiver.acceptChannel({
             temporary_channel_id: pendingTempId,
             funding_amount: quote.receiverAcceptFundingShannons,
           });
-          channelId = acceptResult.channel_id ?? channelId;
+          state.channelId = acceptResult.channel_id ?? state.channelId;
         } catch (error) {
-          manualAcceptError = error instanceof Error ? error.message : String(error);
+          state.manualAcceptError = error instanceof Error ? error.message : String(error);
         }
       }
 
       const serviceChannels = await clients.service.listChannels({ pubkey: receiverPubkey, include_closed: true });
       const receiverChannels = await clients.receiver.listChannels({ pubkey: servicePubkey, include_closed: true });
 
-      const serviceChannel = findChannelByCounterparty(serviceChannels.channels, receiverPubkey);
-      const receiverChannel = findChannelByCounterparty(receiverChannels.channels, servicePubkey);
+      const observed = inspectExecutionState(
+        serviceChannels,
+        receiverChannels,
+        receiverPubkey,
+        servicePubkey,
+        state,
+        "ChannelReady was observed on both service and receiver nodes.",
+      );
 
-      if (serviceChannel && isFundingAborted(serviceChannel)) {
+      if (observed) {
         return {
           mode: "execute",
           plan,
-          execution: {
-            status: "funding_aborted",
-            reason: "Service-side channel entered a funding-aborted or closed state.",
-            temporary_channel_id: temporaryChannelId,
-            channel_id: channelId,
-            manual_accept_attempted: manualAcceptAttempted,
-            manual_accept_error: manualAcceptError,
-          },
-        };
-      }
-
-      if (receiverChannel && isFundingAborted(receiverChannel)) {
-        return {
-          mode: "execute",
-          plan,
-          execution: {
-            status: "funding_aborted",
-            reason: "Receiver-side channel entered a funding-aborted or closed state.",
-            temporary_channel_id: temporaryChannelId,
-            channel_id: channelId,
-            manual_accept_attempted: manualAcceptAttempted,
-            manual_accept_error: manualAcceptError,
-          },
-        };
-      }
-
-      if (serviceChannel && receiverChannel && isChannelReady(serviceChannel) && isChannelReady(receiverChannel)) {
-        return {
-          mode: "execute",
-          plan,
-          execution: {
-            status: "ready",
-            reason: "ChannelReady was observed on both service and receiver nodes.",
-            temporary_channel_id: temporaryChannelId,
-            channel_id: channelId ?? serviceChannel.channel_id,
-            manual_accept_attempted: manualAcceptAttempted,
-            manual_accept_error: manualAcceptError,
-          },
+          execution: observed,
         };
       }
 
       await runtime.sleep(pollIntervalMs);
     }
 
+    {
+      const finalServiceChannels = await clients.service.listChannels({ pubkey: receiverPubkey, include_closed: true });
+      const finalReceiverChannels = await clients.receiver.listChannels({ pubkey: servicePubkey, include_closed: true });
+      const finalObserved = inspectExecutionState(
+        finalServiceChannels,
+        finalReceiverChannels,
+        receiverPubkey,
+        servicePubkey,
+        state,
+        "ChannelReady was observed on both service and receiver nodes during the final timeout check.",
+      );
+
+      if (finalObserved) {
+        return {
+          mode: "execute",
+          plan,
+          execution: finalObserved,
+        };
+      }
+    }
+
     return {
       mode: "execute",
       plan,
       execution: {
-        status: "timeout",
+        status: "timeout_not_ready",
         reason: "Timed out while waiting for ChannelReady or a clear failure state.",
-        temporary_channel_id: temporaryChannelId,
-        channel_id: channelId,
-        manual_accept_attempted: manualAcceptAttempted,
-        manual_accept_error: manualAcceptError,
+        temporary_channel_id: state.temporaryChannelId,
+        channel_id: state.channelId,
+        manual_accept_attempted: state.manualAcceptAttempted,
+        manual_accept_error: state.manualAcceptError,
       },
     };
   } catch (error) {
@@ -381,14 +432,7 @@ export async function prepareInboundChannel(
     return {
       mode: "execute",
       plan,
-      execution: {
-        status: "rpc_error",
-        reason: message,
-        temporary_channel_id: temporaryChannelId,
-        channel_id: channelId,
-        manual_accept_attempted: manualAcceptAttempted,
-        manual_accept_error: manualAcceptError,
-      },
+      execution: buildExecutionResult("rpc_error", message, state),
     };
   }
 }

@@ -415,3 +415,22 @@ Limitations:
 
 - The current coordinator timeout is too short for this live flow.
 - The command still needs a longer poll window or smarter ready detection before it can report success automatically.
+
+## 2026-07-04 Phase 7B coordinator timeout fix
+
+Behavior update:
+
+- Increased the default coordinator timeout to 180 seconds.
+- Added a final readiness check before returning timeout.
+- The coordinator now returns `ready` if `ChannelReady` is observed on the final check.
+- Timeout output is now more specific:
+  - `ready`
+  - `timeout_not_ready`
+  - `funding_aborted`
+  - `rpc_error`
+
+Validation:
+
+- `npx tsc --noEmit` passed.
+- `npx vitest run` passed.
+- Dry-run against node4/node5 remained read-only and reported `ready` because the live `ChannelReady` path already exists.

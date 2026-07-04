@@ -157,7 +157,7 @@ describe("prepareInboundChannel", () => {
     expect(clients.receiver.acceptChannel).not.toHaveBeenCalled();
   });
 
-  it("uses the receiver pending temp id for manual accept", async () => {
+  it("delayed ChannelReady succeeds before timeout and uses receiver pending temp id", async () => {
     const clients = createClients({
       serviceNodeInfo: makeNodeInfo("02service"),
       servicePeers: makePeer("02receiver"),
@@ -165,7 +165,10 @@ describe("prepareInboundChannel", () => {
         { channels: [] },
         { channels: [makeChannel({ pubkey: "02receiver", channel_id: "0xready-service" })] },
       ],
-      receiverPending: [{ channels: [makeChannel({ pubkey: "02service", channel_id: "0xreceiver-temp" })] }],
+      receiverPending: [
+        { channels: [makeChannel({ pubkey: "02service", channel_id: "0xreceiver-temp" })] },
+        { channels: [] },
+      ],
       receiverChannels: [
         { channels: [] },
         { channels: [makeChannel({ pubkey: "02service", channel_id: "0xready-receiver" })] },
@@ -196,6 +199,46 @@ describe("prepareInboundChannel", () => {
       temporary_channel_id: "0xopener-temp",
       funding_amount: 9_900_000_000n,
     });
+  });
+
+  it("returns ready when ChannelReady appears during the final timeout check", async () => {
+    const readyServiceChannel = makeChannel({ pubkey: "02receiver", channel_id: "0xready-service" });
+    const readyReceiverChannel = makeChannel({
+      pubkey: "02service",
+      channel_id: "0xready-receiver",
+      is_acceptor: true,
+      local_balance: "0",
+      remote_balance: "12000000000",
+    });
+
+    const clients = createClients({
+      serviceNodeInfo: makeNodeInfo("02service"),
+      servicePeers: makePeer("02receiver"),
+      serviceChannels: [{ channels: [] }, { channels: [readyServiceChannel] }],
+      receiverPending: [
+        { channels: [makeChannel({ pubkey: "02service", channel_id: "0xreceiver-temp" })] },
+        { channels: [] },
+      ],
+      receiverChannels: [{ channels: [] }, { channels: [readyReceiverChannel] }],
+      openResult: { temporary_channel_id: "0xopener-temp" },
+      acceptResult: { channel_id: "0xaccepted" },
+    });
+
+    const result = await prepareInboundChannel(
+      clients,
+      {
+        serviceNode: "node4",
+        receiverNode: "node3",
+        receiverPubkey: "02receiver",
+        targetPaymentShannons: 100_000_000n,
+      },
+      { execute: true, timeoutMs: 1, pollIntervalMs: 1 },
+      createRuntime(),
+    );
+
+    expect(result.execution?.status).toBe("ready");
+    expect(result.execution?.reason).toMatch(/final timeout check/i);
+    expect(clients.receiver.acceptChannel).toHaveBeenCalledTimes(1);
   });
 
   it("reaches ChannelReady without manual accept when auto-accept happens", async () => {
@@ -259,11 +302,11 @@ describe("prepareInboundChannel", () => {
     expect(result.execution?.reason).toMatch(/funding-aborted|closed/i);
   });
 
-  it("returns timeout when no ChannelReady or failure state appears", async () => {
+  it("returns timeout_not_ready when no ChannelReady or failure state appears", async () => {
     const clients = createClients({
-      serviceChannels: [{ channels: [] }, { channels: [] }, { channels: [] }],
-      receiverPending: [{ channels: [] }, { channels: [] }, { channels: [] }],
-      receiverChannels: [{ channels: [] }, { channels: [] }, { channels: [] }],
+      serviceChannels: [{ channels: [] }, { channels: [] }],
+      receiverPending: [{ channels: [] }, { channels: [] }],
+      receiverChannels: [{ channels: [] }, { channels: [] }],
     });
 
     const result = await prepareInboundChannel(
@@ -278,7 +321,7 @@ describe("prepareInboundChannel", () => {
       createRuntime(),
     );
 
-    expect(result.execution?.status).toBe("timeout");
+    expect(result.execution?.status).toBe("timeout_not_ready");
   });
 
   it("surfaces RPC errors clearly", async () => {

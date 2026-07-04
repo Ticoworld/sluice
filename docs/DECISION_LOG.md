@@ -166,3 +166,14 @@ Decision:
 - The coordinator still returned `timeout` because its polling window expired before readiness was observed.
 - Phase 7B is therefore functionally alive, but the command still needs a longer timeout or improved ready detection before it can report success automatically.
 - No additional live execute retry should be treated as necessary for proving the protocol flow itself; the remaining work is coordinator ergonomics and timeout tuning.
+
+## 2026-07-04 Phase 7B coordinator timeout fix
+
+Decision:
+
+- The coordinator observation path was improved to avoid premature timeout on slow-but-successful channel readiness.
+- Default timeout is now 180 seconds, with user-configurable `--timeout-ms` and `--poll-interval-ms` still supported.
+- The final readiness check now returns `ready` if the channel reaches `ChannelReady` just as the timeout window closes.
+- Failure states are reported more precisely as `timeout_not_ready`, `funding_aborted`, `rpc_error`, or `ready`.
+- No live execute was run after this fix.
+- The repo is ready to commit the timeout/observation improvement once reviewed.
