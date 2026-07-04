@@ -1,0 +1,28 @@
+{
+  "project": "Sluice",
+  "summary": "Before Sluice, Fiber payment failed because no route existed. Sluice then prepared reserve-aware inbound liquidity and the payment succeeded.",
+  "recorded_from": "live local Fiber execution",
+  "proof_stage": "Phase 8B",
+  "quote": {
+    "target_payment": "1 CKB",
+    "receiver_reserve": "99 CKB",
+    "receiver_accept_funding": "99 CKB",
+    "opener_funding": "120 CKB",
+    "estimated_usable_liquidity": "21 CKB"
+  },
+  "live_proof": {
+    "service_node": "node4",
+    "receiver_node": "node9",
+    "before_failure": "Send payment error: Failed to build route, PathFind error: no path found",
+    "temporary_channel_id": "0xee097073bebf5de069088d65de1b0d5f61ff64e21ecb96552ab79ce1104a47463",
+    "channel_id": "0x1125001f2711a1d43aab727937def69c41fd760d7671debf3206fea922f54afd7",
+    "after_payment": "Success",
+    "invoice_status": "Paid",
+    "proof_runner_status": "ready"
+  },
+  "links": {
+    "sdk": "../docs/SDK.md",
+    "http": "../docs/HTTP_API.md",
+    "integration_guide": "../docs/INTEGRATION_GUIDE.md"
+  }
+}

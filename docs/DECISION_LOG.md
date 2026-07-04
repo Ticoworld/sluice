@@ -274,3 +274,20 @@ Decision:
 - The repo map points builders at the new examples and docs.
 - Example TypeScript files are type-checked by including `examples` in `tsconfig.json`.
 - No live execute was run.
+
+## 2026-07-04 Phase 9D submission package and replay demo
+
+Decision:
+
+- Phase 9D passes as the submission package and static hosted demo replay phase.
+- Sluice now includes a judge-facing documentation bundle:
+  - demo summary
+  - technical breakdown
+  - roadmap
+  - video script
+  - AI usage statement
+- Sluice now includes a static hosted demo replay folder with recorded proof data.
+- The hosted demo is intentionally static and does not pretend to execute live Fiber calls.
+- The local runbook remains the path for live Fiber execution and proof reproduction.
+- The top-level README now points builders and judges at the package artifacts.
+- No live execute was run.

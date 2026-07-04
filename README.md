@@ -10,7 +10,7 @@ The goal is simple:
 
 Category: Merchant, Liquidity, LSP, and Multi-Asset Infrastructure.
 
-Status: prep-week spike.
+Status: submission package.
 
 ## Repo Map
 
@@ -32,3 +32,15 @@ Status: prep-week spike.
 - [examples/sdk/prepare-dry-run.ts](examples/sdk/prepare-dry-run.ts): SDK dry-run prepare example with detect mode.
 - [examples/http/curl.md](examples/http/curl.md): curl examples for the HTTP API.
 - [examples/merchant-checkout/README.md](examples/merchant-checkout/README.md): tiny merchant integration story showing the intended usage pattern.
+
+## Submission Package
+
+- [docs/DEMO.md](docs/DEMO.md): one-page demo summary, local runbook, and recorded proof replay notes.
+- [docs/SUBMISSION.md](docs/SUBMISSION.md): judge-facing submission summary and placeholders.
+- [docs/TECHNICAL_BREAKDOWN.md](docs/TECHNICAL_BREAKDOWN.md): architecture and component breakdown.
+- [docs/ROADMAP.md](docs/ROADMAP.md): short-, medium-, and long-term roadmap.
+- [docs/VIDEO_SCRIPT.md](docs/VIDEO_SCRIPT.md): 90-second demo narration script.
+- [docs/AI_USAGE.md](docs/AI_USAGE.md): AI usage and human verification statement.
+- [demo/README.md](demo/README.md): static hosted-demo-ready folder overview.
+- [demo/index.html](demo/index.html): replay page for the recorded Phase 8B proof.
+- [demo/proof-data.json](demo/proof-data.json): replay data used by the static hosted demo.

@@ -676,3 +676,23 @@ Verdict:
 
 - Phase 9C passes as examples plus protocol finding documentation.
 - Sluice is now easier for another builder to understand, copy, and integrate without re-learning the reserve blocker from scratch.
+
+## 2026-07-04 Phase 9D submission package and replay demo
+
+Implementation evidence:
+
+- Added a judge-facing submission package with a one-page demo summary, technical breakdown, roadmap, video script, and AI usage statement.
+- Added a static hosted-demo-ready replay folder with `index.html`, `proof-data.json`, and a short folder README.
+- Added a replay-oriented demo page that clearly says it is a static replay of the recorded live local proof.
+- Updated the top-level README to point builders and judges at the submission package, demo replay, and proof data.
+- Live execute was not run for this phase.
+
+Smoke evidence:
+
+- `npx tsc --noEmit` passed.
+- `npx vitest run` passed.
+
+Verdict:
+
+- Phase 9D passes as the submission package and static hosted demo replay.
+- The hosted demo replays the recorded Phase 8B proof; the local runbook remains the path for live Fiber execution.

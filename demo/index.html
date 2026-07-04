@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sluice Demo</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #07111f;
+        --panel: rgba(12, 23, 39, 0.88);
+        --panel-2: rgba(16, 31, 52, 0.92);
+        --line: rgba(161, 180, 212, 0.18);
+        --text: #e6eefb;
+        --muted: #9eb0cc;
+        --accent: #7ee0b0;
+        --accent-2: #88b7ff;
+        --warn: #ffcc66;
+        --danger: #ff8a7a;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background:
+          radial-gradient(circle at top left, rgba(110, 148, 255, 0.14), transparent 28%),
+          radial-gradient(circle at top right, rgba(126, 224, 176, 0.12), transparent 24%),
+          linear-gradient(180deg, #05101d 0%, #0a1526 100%);
+        color: var(--text);
+      }
+      main {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 40px 20px 60px;
+      }
+      .hero {
+        padding: 28px;
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        background: linear-gradient(180deg, rgba(15, 28, 48, 0.98), rgba(11, 20, 36, 0.96));
+        box-shadow: 0 24px 80px rgba(0, 0, 0, 0.32);
+      }
+      .eyebrow {
+        color: var(--accent);
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        font-size: 0.78rem;
+        margin-bottom: 10px;
+      }
+      h1, h2, h3 {
+        margin: 0;
+        line-height: 1.1;
+      }
+      h1 {
+        font-size: clamp(2.3rem, 6vw, 4.5rem);
+        max-width: 11ch;
+      }
+      .lede {
+        margin-top: 16px;
+        max-width: 64ch;
+        color: var(--muted);
+        font-size: 1.04rem;
+        line-height: 1.65;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: 16px;
+        margin-top: 18px;
+      }
+      .card {
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        background: var(--panel);
+        padding: 20px;
+      }
+      .card h2 {
+        font-size: 1.05rem;
+        margin-bottom: 12px;
+      }
+      .span-4 { grid-column: span 4; }
+      .span-6 { grid-column: span 6; }
+      .span-12 { grid-column: span 12; }
+      .stat {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        padding: 14px 0;
+        border-top: 1px solid var(--line);
+      }
+      .stat:first-of-type { border-top: 0; padding-top: 0; }
+      .label { color: var(--muted); font-size: 0.88rem; }
+      .value { font-size: 1.08rem; font-weight: 650; }
+      .value code, code, pre {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: rgba(126, 224, 176, 0.14);
+        color: var(--accent);
+        border: 1px solid rgba(126, 224, 176, 0.22);
+        font-size: 0.84rem;
+      }
+      .bad {
+        background: rgba(255, 138, 122, 0.12);
+        color: var(--danger);
+        border-color: rgba(255, 138, 122, 0.22);
+      }
+      .warn {
+        background: rgba(255, 204, 102, 0.12);
+        color: var(--warn);
+        border-color: rgba(255, 204, 102, 0.22);
+      }
+      pre {
+        white-space: pre-wrap;
+        word-break: break-word;
+        margin: 0;
+        padding: 14px;
+        border-radius: 16px;
+        background: var(--panel-2);
+        border: 1px solid var(--line);
+        color: #dbe7fa;
+        line-height: 1.6;
+      }
+      .links {
+        display: grid;
+        gap: 10px;
+      }
+      a {
+        color: #9cc4ff;
+        text-decoration: none;
+      }
+      a:hover { text-decoration: underline; }
+      .timeline {
+        display: grid;
+        gap: 14px;
+      }
+      .timeline-item {
+        padding-left: 16px;
+        border-left: 2px solid rgba(136, 183, 255, 0.35);
+      }
+      @media (max-width: 900px) {
+        .span-4, .span-6, .span-12 { grid-column: span 12; }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section class="hero">
+        <div class="eyebrow">Sluice demo</div>
+        <h1>Reserve-aware inbound liquidity for Fiber.</h1>
+        <p class="lede" id="summary">
+          This is a static replay of the recorded live local proof. Before Sluice, the payment failed because no route existed. Sluice prepared reserve-aware inbound liquidity and the payment succeeded.
+        </p>
+        <div class="pill" id="recorded-pill">Static replay of recorded live local Fiber execution</div>
+      </section>
+
+      <section class="grid" aria-label="Demo details">
+        <div class="card span-4">
+          <h2>Quote</h2>
+          <div id="quote"></div>
+        </div>
+        <div class="card span-4">
+          <h2>Recorded Proof</h2>
+          <div id="proof"></div>
+        </div>
+        <div class="card span-4">
+          <h2>Links</h2>
+          <div class="links" id="links"></div>
+        </div>
+        <div class="card span-12">
+          <h2>Story</h2>
+          <div class="timeline" id="story"></div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      async function main() {
+        const response = await fetch("./proof-data.json");
+        const data = await response.json();
+
+        document.querySelector("#summary").textContent = data.summary;
+        document.querySelector("#recorded-pill").textContent = `Recorded from ${data.recorded_from}`;
+
+        document.querySelector("#quote").innerHTML = `
+          <div class="stat"><div class="label">Target payment</div><div class="value">${data.quote.target_payment}</div></div>
+          <div class="stat"><div class="label">Receiver reserve</div><div class="value">${data.quote.receiver_reserve}</div></div>
+          <div class="stat"><div class="label">Receiver accept funding</div><div class="value">${data.quote.receiver_accept_funding}</div></div>
+          <div class="stat"><div class="label">Opener funding</div><div class="value">${data.quote.opener_funding}</div></div>
+          <div class="stat"><div class="label">Estimated usable liquidity</div><div class="value">${data.quote.estimated_usable_liquidity}</div></div>
+        `;
+
+        document.querySelector("#proof").innerHTML = `
+          <div class="stat"><div class="label">Service node</div><div class="value">${data.live_proof.service_node}</div></div>
+          <div class="stat"><div class="label">Receiver node</div><div class="value">${data.live_proof.receiver_node}</div></div>
+          <div class="stat"><div class="label">Proof runner</div><div class="value">${data.live_proof.proof_runner_status}</div></div>
+          <div class="stat"><div class="label">Payment result</div><div class="value">${data.live_proof.after_payment}</div></div>
+          <div class="stat"><div class="label">Invoice status</div><div class="value">${data.live_proof.invoice_status}</div></div>
+        `;
+
+        document.querySelector("#links").innerHTML = `
+          <a href="../docs/SDK.md">SDK docs</a>
+          <a href="../docs/HTTP_API.md">HTTP API docs</a>
+          <a href="../docs/INTEGRATION_GUIDE.md">Integration guide</a>
+          <a href="../docs/FIBER_RESERVE_FINDING.md">Reserve finding</a>
+        `;
+
+        document.querySelector("#story").innerHTML = `
+          <div class="timeline-item">
+            <strong>Before</strong>
+            <pre>${data.live_proof.before_failure}</pre>
+          </div>
+          <div class="timeline-item">
+            <strong>Channel setup</strong>
+            <pre>temporary_channel_id: ${data.live_proof.temporary_channel_id}
+channel_id: ${data.live_proof.channel_id}</pre>
+          </div>
+          <div class="timeline-item">
+            <strong>After</strong>
+            <pre>payment: ${data.live_proof.after_payment}
+invoice: ${data.live_proof.invoice_status}</pre>
+          </div>
+        `;
+      }
+
+      main().catch((error) => {
+        const message = error instanceof Error ? error.message : String(error);
+        document.body.insertAdjacentHTML(
+          "afterbegin",
+          `<div style="padding:16px;color:#ff8a7a;background:#1a1020;border-bottom:1px solid rgba(255,138,122,0.3)">Failed to load demo data: ${message}. Serve the folder over HTTP so proof-data.json can load.</div>`,
+        );
+      });
+    </script>
+  </body>
+</html>
