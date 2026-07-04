@@ -468,3 +468,36 @@ Verdict:
 - Phase 7B is complete.
 - The coordinator now proves the live reserve-aware open/accept/ChannelReady flow and returns `ready` on its own.
 - Next phase is Phase 8, the before/after payment proof runner.
+
+## 2026-07-04 Phase 8A proof runner foundation
+
+Evidence:
+
+- Added invoice and payment RPC support to the Fiber client.
+- Added the `prove-payment` CLI command.
+- The proof runner is dry-run by default and stays read-only unless `--execute --yes` is supplied later.
+- The proof runner plans the before/after flow as:
+  1. create the receiver invoice
+  2. attempt the before-payment
+  3. prepare reserve-aware inbound liquidity
+  4. retry the payment after `ChannelReady`
+  5. verify payment `Success`
+  6. verify receiver invoice `Paid`
+- Tests were added for the proof runner and the invoice/payment RPC request shapes.
+
+Validation:
+
+- `npx tsc --noEmit` passed.
+- `npx vitest run` passed with 6 files and 39 tests.
+- `npx tsx src/index.ts prove-payment --service node4 --receiver node3 --amount-ckb 1` passed as a dry-run and did not mutate live Fiber state.
+- `$env:SLUICE_NODE5_RPC_URL='http://127.0.0.1:8267'; npx tsx src/index.ts prove-payment --service node4 --receiver node5 --amount-ckb 1` also passed as a dry-run, confirming env-backed receiver resolution.
+
+Limits:
+
+- No live `--execute` proof run has been performed yet.
+- The already-ready local nodes correctly short-circuit into dry-run planning.
+- The full Phase 8 before/after proof still needs a fresh `node7` live run.
+
+Next phase:
+
+- Phase 8B, the live before/after payment proof runner against a fresh receiver.

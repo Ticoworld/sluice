@@ -131,3 +131,119 @@ export const acceptChannelResultSchema = z
   .passthrough();
 
 export type AcceptChannelResult = z.infer<typeof acceptChannelResultSchema>;
+
+export const ckbInvoiceDataSchema = z
+  .object({
+    payment_hash: z.string(),
+  })
+  .passthrough();
+
+export const ckbInvoiceSchema = z
+  .object({
+    data: ckbInvoiceDataSchema,
+  })
+  .passthrough();
+
+export type CkbInvoice = z.infer<typeof ckbInvoiceSchema>;
+
+export const newInvoiceParamsSchema = z
+  .object({
+    amount: fundingLike,
+    description: z.string().optional(),
+    currency: z.string(),
+    payment_preimage: z.string().optional(),
+    payment_hash: z.string().optional(),
+    expiry: numericLike.optional(),
+    fallback_address: z.string().optional(),
+    final_expiry_delta: numericLike.optional(),
+    udt_type_script: z.unknown().optional(),
+    hash_algorithm: z.unknown().optional(),
+    allow_mpp: z.boolean().optional(),
+    allow_trampoline_routing: z.boolean().optional(),
+  })
+  .passthrough();
+
+export type NewInvoiceParams = z.infer<typeof newInvoiceParamsSchema>;
+
+export const newInvoiceResultSchema = z
+  .object({
+    invoice_address: z.string(),
+    invoice: ckbInvoiceSchema,
+  })
+  .passthrough();
+
+export type NewInvoiceResult = z.infer<typeof newInvoiceResultSchema>;
+
+export const getInvoiceResultSchema = z
+  .object({
+    invoice_address: z.string(),
+    invoice: ckbInvoiceSchema,
+    status: z.string(),
+  })
+  .passthrough();
+
+export type GetInvoiceResult = z.infer<typeof getInvoiceResultSchema>;
+
+export const sendPaymentParamsSchema = z
+  .object({
+    target_pubkey: z.string().optional(),
+    amount: fundingLike.optional(),
+    payment_hash: z.string().optional(),
+    final_tlc_expiry_delta: numericLike.optional(),
+    tlc_expiry_limit: numericLike.optional(),
+    invoice: z.string().optional(),
+    timeout: numericLike.optional(),
+    max_fee_amount: fundingLike.optional(),
+    max_fee_rate: numericLike.optional(),
+    max_parts: numericLike.optional(),
+    trampoline_hops: z.array(z.string()).optional(),
+    keysend: z.boolean().optional(),
+    udt_type_script: z.unknown().optional(),
+    allow_self_payment: z.boolean().optional(),
+    custom_records: z.unknown().optional(),
+    hop_hints: z.array(z.unknown()).optional(),
+    dry_run: z.boolean().optional(),
+  })
+  .passthrough();
+
+export type SendPaymentParams = z.infer<typeof sendPaymentParamsSchema>;
+
+export const paymentResultSchema = z
+  .object({
+    payment_hash: z.string(),
+    status: z.string(),
+    created_at: numericLike,
+    last_updated_at: numericLike,
+    failed_error: z.string().nullable().optional(),
+    fee: fundingLike,
+    custom_records: z.unknown().optional().nullable(),
+    routers: z.array(z.unknown()).optional(),
+  })
+  .passthrough();
+
+export type PaymentResult = z.infer<typeof paymentResultSchema>;
+
+export const sendPaymentResultSchema = paymentResultSchema;
+export type SendPaymentResult = z.infer<typeof sendPaymentResultSchema>;
+
+export const getPaymentResultSchema = paymentResultSchema;
+export type GetPaymentResult = z.infer<typeof getPaymentResultSchema>;
+
+export const listPaymentsParamsSchema = z
+  .object({
+    status: z.string().optional(),
+    limit: numericLike.optional(),
+    after: z.string().optional(),
+  })
+  .partial();
+
+export type ListPaymentsParams = z.infer<typeof listPaymentsParamsSchema>;
+
+export const listPaymentsResultSchema = z
+  .object({
+    payments: z.array(paymentResultSchema),
+    last_cursor: z.string().nullable().optional(),
+  })
+  .passthrough();
+
+export type ListPaymentsResult = z.infer<typeof listPaymentsResultSchema>;

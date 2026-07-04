@@ -188,3 +188,15 @@ Decision:
 - The coordinator returned `ready`, so the fixed observation path is now live-proven, not just unit-tested.
 - No further Phase 7B live retries are needed.
 - Next phase is Phase 8: the before/after payment proof runner.
+
+## 2026-07-04 Phase 8A proof runner foundation
+
+Decision:
+
+- Phase 8A passed as the proof-runner foundation.
+- Sluice now has invoice/payment RPC support plus a `prove-payment` CLI command that is dry-run by default.
+- The proof runner can plan the full before/after payment story: create the invoice, attempt payment before liquidity, prepare reserve-aware inbound liquidity, retry after `ChannelReady`, and verify both payment `Success` and invoice `Paid`.
+- The proof runner was verified without live mutation on the current already-ready local nodes.
+- Env-backed receiver resolution works, so a fresh `node7` can be used for the live Phase 8B proof without hardcoded local config changes.
+- Full Phase 8 is not passed yet.
+- Next phase is Phase 8B, the live before/after payment proof runner against a fresh receiver.

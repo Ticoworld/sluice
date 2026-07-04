@@ -155,6 +155,141 @@ describe("FiberRpcClient", () => {
     );
   });
 
+  it("sends a new_invoice request with serialized amount", async () => {
+    const fetchImpl = mockFetchOnce({
+      jsonrpc: "2.0",
+      id: 1,
+      result: {
+        invoice_address: "fibt1test",
+        invoice: {
+          data: {
+            payment_hash: "0xhash",
+          },
+        },
+      },
+    });
+
+    const client = new FiberRpcClient({ url: RPC_URL, fetchImpl });
+    const result = await client.newInvoice({
+      amount: 100_000_000n,
+      currency: "Fibt",
+      description: "phase 8 proof",
+    });
+
+    expect(result.invoice_address).toBe("fibt1test");
+    expect(fetchImpl).toHaveBeenCalledWith(
+      RPC_URL,
+      expect.objectContaining({
+        body: expect.stringContaining(
+          '"method":"new_invoice","params":[{"amount":"0x5f5e100","description":"phase 8 proof","currency":"Fibt"}]',
+        ),
+      }),
+    );
+  });
+
+  it("sends a send_payment request with an invoice address", async () => {
+    const fetchImpl = mockFetchOnce({
+      jsonrpc: "2.0",
+      id: 1,
+      result: {
+        payment_hash: "0xhash",
+        status: "Failed",
+        created_at: 1,
+        last_updated_at: 1,
+        failed_error: "no path found",
+        fee: "0",
+        custom_records: null,
+        routers: [],
+      },
+    });
+
+    const client = new FiberRpcClient({ url: RPC_URL, fetchImpl });
+    const result = await client.sendPayment({ invoice: "fibt1test" });
+
+    expect(result.payment_hash).toBe("0xhash");
+    expect(fetchImpl).toHaveBeenCalledWith(
+      RPC_URL,
+      expect.objectContaining({
+        body: expect.stringContaining('"method":"send_payment","params":[{"invoice":"fibt1test"}]'),
+      }),
+    );
+  });
+
+  it("sends a get_invoice request by payment hash", async () => {
+    const fetchImpl = mockFetchOnce({
+      jsonrpc: "2.0",
+      id: 1,
+      result: {
+        invoice_address: "fibt1test",
+        invoice: { data: { payment_hash: "0xhash" } },
+        status: "Paid",
+      },
+    });
+
+    const client = new FiberRpcClient({ url: RPC_URL, fetchImpl });
+    const result = await client.getInvoice("0xhash");
+
+    expect(result.status).toBe("Paid");
+    expect(fetchImpl).toHaveBeenCalledWith(
+      RPC_URL,
+      expect.objectContaining({
+        body: expect.stringContaining('"method":"get_invoice","params":[{"payment_hash":"0xhash"}]'),
+      }),
+    );
+  });
+
+  it("sends a get_payment request by payment hash", async () => {
+    const fetchImpl = mockFetchOnce({
+      jsonrpc: "2.0",
+      id: 1,
+      result: {
+        payment_hash: "0xhash",
+        status: "Success",
+        created_at: 1,
+        last_updated_at: 1,
+        failed_error: null,
+        fee: "0",
+        custom_records: null,
+        routers: [],
+      },
+    });
+
+    const client = new FiberRpcClient({ url: RPC_URL, fetchImpl });
+    const result = await client.getPayment("0xhash");
+
+    expect(result.status).toBe("Success");
+    expect(fetchImpl).toHaveBeenCalledWith(
+      RPC_URL,
+      expect.objectContaining({
+        body: expect.stringContaining('"method":"get_payment","params":[{"payment_hash":"0xhash"}]'),
+      }),
+    );
+  });
+
+  it("sends a list_payments request with filters", async () => {
+    const fetchImpl = mockFetchOnce({
+      jsonrpc: "2.0",
+      id: 1,
+      result: {
+        payments: [],
+        last_cursor: null,
+      },
+    });
+
+    const client = new FiberRpcClient({ url: RPC_URL, fetchImpl });
+    const result = await client.listPayments({ status: "Success", limit: 10, after: "0xafter" });
+
+    expect(result.payments).toEqual([]);
+    expect(fetchImpl).toHaveBeenCalledWith(
+      RPC_URL,
+      expect.objectContaining({
+        body: expect.stringContaining(
+          '"method":"list_payments","params":[{"status":"Success","limit":10,"after":"0xafter"}]',
+        ),
+      }),
+    );
+  });
+
   it("throws FiberRpcError on a JSON-RPC error response", async () => {
     const fetchImpl = mockFetchOnce({
       jsonrpc: "2.0",

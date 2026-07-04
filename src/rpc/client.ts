@@ -2,20 +2,36 @@ import type { z } from "zod";
 import {
   acceptChannelParamsSchema,
   acceptChannelResultSchema,
+  getInvoiceResultSchema,
+  getPaymentResultSchema,
   listChannelsParamsSchema,
   listChannelsResultSchema,
+  listPaymentsParamsSchema,
+  listPaymentsResultSchema,
   listPeersResultSchema,
+  newInvoiceParamsSchema,
+  newInvoiceResultSchema,
   nodeInfoSchema,
+  sendPaymentParamsSchema,
+  sendPaymentResultSchema,
   openChannelParamsSchema,
   openChannelResultSchema,
   type AcceptChannelParams,
   type AcceptChannelResult,
+  type GetInvoiceResult,
+  type GetPaymentResult,
   type ListChannelsParams,
   type ListChannelsResult,
+  type ListPaymentsParams,
+  type ListPaymentsResult,
   type ListPeersResult,
+  type NewInvoiceParams,
+  type NewInvoiceResult,
   type NodeInfo,
   type OpenChannelParams,
   type OpenChannelResult,
+  type SendPaymentParams,
+  type SendPaymentResult,
 } from "./types.js";
 
 interface JsonRpcRequest {
@@ -125,5 +141,28 @@ export class FiberRpcClient {
   acceptChannel(params: AcceptChannelParams): Promise<AcceptChannelResult> {
     const validParams = acceptChannelParamsSchema.parse(params);
     return this.call("accept_channel", [validParams], acceptChannelResultSchema);
+  }
+
+  newInvoice(params: NewInvoiceParams): Promise<NewInvoiceResult> {
+    const validParams = newInvoiceParamsSchema.parse(params);
+    return this.call("new_invoice", [validParams], newInvoiceResultSchema);
+  }
+
+  getInvoice(paymentHash: string): Promise<GetInvoiceResult> {
+    return this.call("get_invoice", [{ payment_hash: paymentHash }], getInvoiceResultSchema);
+  }
+
+  sendPayment(params: SendPaymentParams): Promise<SendPaymentResult> {
+    const validParams = sendPaymentParamsSchema.parse(params);
+    return this.call("send_payment", [validParams], sendPaymentResultSchema);
+  }
+
+  getPayment(paymentHash: string): Promise<GetPaymentResult> {
+    return this.call("get_payment", [{ payment_hash: paymentHash }], getPaymentResultSchema);
+  }
+
+  listPayments(params: ListPaymentsParams = {}): Promise<ListPaymentsResult> {
+    const validParams = listPaymentsParamsSchema.parse(params);
+    return this.call("list_payments", [validParams], listPaymentsResultSchema);
   }
 }
