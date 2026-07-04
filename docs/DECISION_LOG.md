@@ -177,3 +177,14 @@ Decision:
 - Failure states are reported more precisely as `timeout_not_ready`, `funding_aborted`, `rpc_error`, or `ready`.
 - No live execute was run after this fix.
 - The repo is ready to commit the timeout/observation improvement once reviewed.
+
+## 2026-07-04 Phase 7B final live proof
+
+Decision:
+
+- Phase 7B is passed.
+- A fresh `node6` receiver was created, funded, connected to node4, and verified as not already ready.
+- The live `prepare-inbound --execute --yes` run against node4 and node6 successfully opened the channel, detected the receiver pending entry, accepted it, and reached `ChannelReady` on both nodes.
+- The coordinator returned `ready`, so the fixed observation path is now live-proven, not just unit-tested.
+- No further Phase 7B live retries are needed.
+- Next phase is Phase 8: the before/after payment proof runner.

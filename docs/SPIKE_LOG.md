@@ -434,3 +434,37 @@ Validation:
 - `npx tsc --noEmit` passed.
 - `npx vitest run` passed.
 - Dry-run against node4/node5 remained read-only and reported `ready` because the live `ChannelReady` path already exists.
+
+## 2026-07-04 Phase 7B final live proof
+
+Fresh receiver setup:
+
+- Created a fresh `sluice-node6` receiver with RPC `8277` and P2P `8278`.
+- Node6 `node_info` succeeded and reported `auto_accept_channel_ckb_funding_amount: 0x0`.
+- Node6 was funded via the faucet with 10000.0 CKB.
+- Node4 was connected to node6 as a peer.
+- Before the live execute, node4 and node6 had no existing `ChannelReady` path between them.
+
+Dry-run evidence:
+
+- `npx tsx src/index.ts prepare-inbound --service node4 --receiver node6 --amount-ckb 1`
+- Dry-run reported `readiness_satisfied: false`.
+- Dry-run reported the expected reserve-aware quote:
+  - opener funding: `120 CKB`
+  - receiver accept funding: `99 CKB`
+- Planned steps were open, wait for pending, accept, and poll until `ChannelReady`.
+
+Live execute evidence:
+
+- One live `prepare-inbound --execute --yes` attempt was run against node4 and node6.
+- `open_channel` returned temporary channel id `0x8af43794c5c574f6d731a420f5c932739d3a1b557d93a44e72b49943346e1766`.
+- Receiver pending was detected.
+- `accept_channel` returned channel id `0xe94aeb8d0cbbdebf04414b1b5ab07ca4dfa272e0bfe780bc1bb6e8ab2f7dc472`.
+- The coordinator returned `ready`.
+- Read-only follow-up checks confirmed node4 and node6 both showed the new channel as `ChannelReady`.
+
+Verdict:
+
+- Phase 7B is complete.
+- The coordinator now proves the live reserve-aware open/accept/ChannelReady flow and returns `ready` on its own.
+- Next phase is Phase 8, the before/after payment proof runner.
