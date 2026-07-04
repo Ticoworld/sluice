@@ -215,3 +215,17 @@ Decision:
 - The proof runner now retries transient route errors after `ChannelReady`, which was required for the live end-to-end proof.
 - Phase 8 is complete.
 - Next work is whatever productization or documentation the repo owner wants next; the proof spike itself is finished.
+
+## 2026-07-04 Phase 9A0 auto-accept finding
+
+Decision:
+
+- Phase 9A0 is passed as a finding.
+- In this local Fiber setup, CKB auto-accept was not reliable enough to replace the manual accept path.
+- Fresh receiver tests showed:
+  - disabled auto-accept exposed pending inbound and manual accept worked
+  - enabled auto-accept still exposed pending inbound and manual accept remained valid
+- Sluice should not assume auto-accept will happen.
+- The SDK/API should expose `manual`, `auto`, and `detect` modes.
+- Recommended default is `detect`, with a manual fallback when auto-accept is not clearly observed.
+- The next product phase can focus on a public SDK/API layer that wraps the proven manual path cleanly.

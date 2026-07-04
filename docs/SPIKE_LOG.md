@@ -547,3 +547,42 @@ Verdict:
 - The full before/after payment proof is now complete on a fresh receiver.
 - Cat 3 remains confirmed.
 - The proof runner now demonstrates the live before/after loop end to end.
+
+## 2026-07-04 Phase 9A0 auto-accept finding
+
+Investigation setup:
+
+- Service/opener: `node4`
+- Disabled receiver: `node10`
+  - RPC `8317`
+  - P2P `8318`
+  - `auto_accept_channel_ckb_funding_amount: 0x0`
+- Enabled receiver: `node11`
+  - RPC `8327`
+  - P2P `8328`
+  - `auto_accept_channel_ckb_funding_amount: 0x2540be400`
+- `open_channel_auto_accept_min_ckb_funding_amount` was visible on both test nodes as `0x2540be400`
+- Open amount used for both tests: `120 CKB`
+- Receiver accept amount used for both tests: `99 CKB`
+
+Disabled receiver evidence:
+
+- `open_channel` returned temporary channel id `0x847c9ab2226a95775a5ab5883188f79bdc2be1b65d3f4b630953cf8ab431350a`
+- `channel list_channels --only-pending true` on node10 showed `NegotiatingFunding`
+- `channel list_channels` without the pending filter did not show the pending entry before manual accept
+- `accept_channel` on node10 succeeded and returned channel id `0x9595eb599302441a5eec5846733d8ff105fca16a8dd7599490eb27a2d373ce9e`
+
+Enabled receiver evidence:
+
+- `open_channel` returned temporary channel id `0x5e92407ee2a6571134de888752b405ce0d233af29b5ceeb0d614848c981379e9`
+- `channel list_channels --only-pending true` on node11 showed `NegotiatingFunding`
+- The pending temp id remained visible during the observation window
+- `accept_channel` on node11 remained valid and returned channel id `0x2964613d19a612a210c10257d3d64920f34e6d1bedf15408d19ad0cbbf4a29e7`
+- Auto-accept did not replace the manual accept path in this test
+
+Verdict:
+
+- Phase 9A0 is complete as a finding, not as a product implementation phase.
+- Manual accept remains the stable proven path.
+- The SDK/API should expose `manual`, `auto`, and `detect` modes, with `detect` as the recommended default and manual fallback.
+- Next phase is public SDK/API work, not new Fiber protocol experimentation.
