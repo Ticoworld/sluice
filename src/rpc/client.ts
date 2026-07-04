@@ -117,11 +117,11 @@ export class FiberRpcClient {
   }
 
   nodeInfo(): Promise<NodeInfo> {
-    return this.call("node_info", null, nodeInfoSchema);
+    return this.call("node_info", {}, nodeInfoSchema);
   }
 
   listPeers(): Promise<ListPeersResult> {
-    return this.call("list_peers", null, listPeersResultSchema);
+    return this.call("list_peers", {}, listPeersResultSchema);
   }
 
   listChannels(params: ListChannelsParams = {}): Promise<ListChannelsResult> {

@@ -98,7 +98,7 @@ Decision:
 
 - Typed Fiber RPC client foundation is passed.
 - Live smoke test against node3/node4 passed for `node-info`, `peers`, and `channels` on both nodes.
-- The `list_channels` client needed the live Fiber wire shape `{ params: {...} }`, and the client now matches that shape.
+- The `list_channels` client needed the live Fiber wire shape `params: [ { ... } ]`, and the client now matches that shape.
 - This closes the live compatibility check for the typed RPC foundation.
 
 ## 2026-07-03 Phase 5
@@ -229,3 +229,20 @@ Decision:
 - The SDK/API should expose `manual`, `auto`, and `detect` modes.
 - Recommended default is `detect`, with a manual fallback when auto-accept is not clearly observed.
 - The next product phase can focus on a public SDK/API layer that wraps the proven manual path cleanly.
+
+## 2026-07-04 Phase 9A SDK foundation
+
+Decision:
+
+- Phase 9A passes as the public SDK foundation.
+- Sluice now exposes a reusable developer-facing SDK with:
+  - `quote()`
+  - `checkReadiness()`
+  - `prepareInbound()`
+  - `provePayment()`
+- The SDK default accept mode is `detect`.
+- `manual` remains the stable fallback path.
+- `auto` is exposed but treated as experimental and environment-dependent.
+- Live mutation still requires explicit `execute: true` plus `yes: true`.
+- The RPC client now uses single-object JSON-RPC params arrays to match the live Fiber wire format.
+- Next work can focus on packaging or higher-level ergonomics, not on more spike discovery.

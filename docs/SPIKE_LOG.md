@@ -586,3 +586,33 @@ Verdict:
 - Manual accept remains the stable proven path.
 - The SDK/API should expose `manual`, `auto`, and `detect` modes, with `detect` as the recommended default and manual fallback.
 - Next phase is public SDK/API work, not new Fiber protocol experimentation.
+
+## 2026-07-04 Phase 9A SDK foundation
+
+Implementation evidence:
+
+- Added the public `Sluice` SDK wrapper over the existing quote, readiness, coordinator, and proof modules.
+- Added single-object JSON-RPC params arrays to match the live Fiber wire format for channel and payment methods.
+- Added explicit SDK modes:
+  - `detect`
+  - `manual`
+  - `auto`
+- Default SDK accept mode is `detect`.
+- Live mutation still requires `execute: true` and `yes: true`.
+- Added `docs/SDK.md` as the public SDK guide.
+
+Smoke evidence:
+
+- `npx tsc --noEmit` passed.
+- `npx vitest run` passed.
+- `npx tsx -e` SDK smoke returned a dry-run result with:
+  - `mode: dry-run`
+  - `readiness: not_ready`
+  - `acceptMode: detect`
+  - `openerFunding: 120 CKB`
+
+Verdict:
+
+- Phase 9A passes as the public SDK foundation.
+- The SDK is now the reusable developer-facing surface for quote, readiness, prepare, and proof flows.
+- The next phase can focus on broader packaging or higher-level developer API polish, not more protocol discovery.

@@ -13,6 +13,7 @@ import { evaluateReadiness, type ReadinessCheckResult } from "./readiness.js";
 
 export type CoordinatorMode = "dry-run" | "execute";
 export type CoordinatorStatus = "ready" | "timeout_not_ready" | "funding_aborted" | "rpc_error";
+export type AcceptMode = "detect" | "manual" | "auto";
 
 export interface CoordinatorInput {
   serviceNode: string;
@@ -25,6 +26,7 @@ export interface CoordinatorOptions {
   execute?: boolean;
   timeoutMs?: number;
   pollIntervalMs?: number;
+  acceptMode?: AcceptMode;
 }
 
 export interface CoordinatorPlan {
@@ -35,6 +37,7 @@ export interface CoordinatorPlan {
   opener_funding: PrintableQuoteAmount;
   receiver_accept_funding: PrintableQuoteAmount;
   readiness_satisfied: boolean;
+  accept_mode: AcceptMode;
   planned_steps: string[];
   readiness: ReadinessCheckResult;
 }
@@ -161,12 +164,20 @@ async function resolveReceiverPubkey(
   return info.pubkey;
 }
 
-function planSteps(readiness: ReadinessCheckResult): string[] {
+function planSteps(readiness: ReadinessCheckResult, acceptMode: AcceptMode): string[] {
   if (readiness.readiness_status === "ready") {
     return [
       "receiver is already ready",
       "no new channel should be opened",
       "retry the payment with the existing ChannelReady path",
+    ];
+  }
+
+  if (acceptMode === "auto") {
+    return [
+      "open reserve-aware channel from the service node to the receiver",
+      "poll both nodes until ChannelReady or a clear failure state appears",
+      "do not manually accept the channel; rely on the receiver's configured auto-accept path if it is enabled",
     ];
   }
 
@@ -213,6 +224,7 @@ function inspectExecutionState(
   receiverChannels: ListChannelsResult,
   receiverPubkey: string,
   servicePubkey: string,
+  acceptMode: AcceptMode,
   state: ExecutionState,
   readyReason: string,
 ): CoordinatorExecutionResult | null {
@@ -236,6 +248,10 @@ function inspectExecutionState(
   }
 
   if (serviceChannel && receiverChannel && isChannelReady(serviceChannel) && isChannelReady(receiverChannel)) {
+    if (acceptMode === "manual" && !state.manualAcceptAttempted) {
+      return null;
+    }
+
     return buildExecutionResult("ready", readyReason, {
       ...state,
       channelId: state.channelId ?? serviceChannel.channel_id,
@@ -251,6 +267,7 @@ export async function prepareInboundChannel(
   options: CoordinatorOptions = {},
   runtime: CoordinatorRuntime = defaultRuntime,
 ): Promise<CoordinatorResult> {
+  const acceptMode = options.acceptMode ?? "detect";
   const serviceNodeInfo = await clients.service.nodeInfo();
   const receiverPubkey = await resolveReceiverPubkey(clients.receiver, input.receiverPubkey);
   const quote = buildReserveAwareQuote({ targetPaymentShannons: input.targetPaymentShannons });
@@ -268,7 +285,8 @@ export async function prepareInboundChannel(
     opener_funding: printableAmount(quote.recommendedOpenerFundingShannons),
     receiver_accept_funding: printableAmount(quote.receiverAcceptFundingShannons),
     readiness_satisfied: readiness.readiness_status === "ready",
-    planned_steps: planSteps(readiness),
+    accept_mode: acceptMode,
+    planned_steps: planSteps(readiness, acceptMode),
     readiness: {
       ...readiness,
       service_node_pubkey: readiness.service_node_pubkey ?? serviceNodeInfo.pubkey,
@@ -347,21 +365,23 @@ export async function prepareInboundChannel(
     }
 
     while (runtime.now() < deadline) {
-      const pendingList = await (clients.receiver.listPendingChannels
-        ? clients.receiver.listPendingChannels({ pubkey: servicePubkey })
-        : clients.receiver.listChannels({ pubkey: servicePubkey, only_pending: true }));
+      if (acceptMode !== "auto") {
+        const pendingList = await (clients.receiver.listPendingChannels
+          ? clients.receiver.listPendingChannels({ pubkey: servicePubkey })
+          : clients.receiver.listChannels({ pubkey: servicePubkey, only_pending: true }));
 
-      const pendingTempId = findPendingTempId(pendingList.channels, state.temporaryChannelId);
-      if (pendingTempId && !state.manualAcceptAttempted) {
-        state.manualAcceptAttempted = true;
-        try {
-          const acceptResult = await clients.receiver.acceptChannel({
-            temporary_channel_id: pendingTempId,
-            funding_amount: quote.receiverAcceptFundingShannons,
-          });
-          state.channelId = acceptResult.channel_id ?? state.channelId;
-        } catch (error) {
-          state.manualAcceptError = error instanceof Error ? error.message : String(error);
+        const pendingTempId = findPendingTempId(pendingList.channels, state.temporaryChannelId);
+        if (pendingTempId && !state.manualAcceptAttempted) {
+          state.manualAcceptAttempted = true;
+          try {
+            const acceptResult = await clients.receiver.acceptChannel({
+              temporary_channel_id: pendingTempId,
+              funding_amount: quote.receiverAcceptFundingShannons,
+            });
+            state.channelId = acceptResult.channel_id ?? state.channelId;
+          } catch (error) {
+            state.manualAcceptError = error instanceof Error ? error.message : String(error);
+          }
         }
       }
 
@@ -373,6 +393,7 @@ export async function prepareInboundChannel(
         receiverChannels,
         receiverPubkey,
         servicePubkey,
+        acceptMode,
         state,
         "ChannelReady was observed on both service and receiver nodes.",
       );
@@ -396,6 +417,7 @@ export async function prepareInboundChannel(
         finalReceiverChannels,
         receiverPubkey,
         servicePubkey,
+        acceptMode,
         state,
         "ChannelReady was observed on both service and receiver nodes during the final timeout check.",
       );

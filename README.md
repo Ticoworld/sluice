@@ -21,3 +21,4 @@ Status: prep-week spike.
 - [docs/REAL_VS_SIMULATED.md](docs/REAL_VS_SIMULATED.md): what is real, what is simulated, and what is out of scope.
 - [docs/DECISION_LOG.md](docs/DECISION_LOG.md): dated scope and direction decisions.
 - [docs/SPIKE_LOG.md](docs/SPIKE_LOG.md): spike notes and measurement log.
+- [docs/SDK.md](docs/SDK.md): public SDK usage, safety model, and examples.

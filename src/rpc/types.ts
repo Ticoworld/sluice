@@ -100,6 +100,16 @@ export const openChannelParamsSchema = z
     funding_amount: fundingLike,
     public: z.boolean().optional(),
     one_way: z.boolean().optional(),
+    funding_udt_type_script: z.unknown().optional(),
+    shutdown_script: z.unknown().optional(),
+    commitment_delay_epoch: z.unknown().optional(),
+    commitment_fee_rate: numericLike.optional(),
+    funding_fee_rate: numericLike.optional(),
+    tlc_expiry_delta: numericLike.optional(),
+    tlc_min_value: fundingLike.optional(),
+    tlc_fee_proportional_millionths: fundingLike.optional(),
+    max_tlc_value_in_flight: fundingLike.optional(),
+    max_tlc_number_in_flight: numericLike.optional(),
   })
   .passthrough();
 
@@ -118,6 +128,12 @@ export const acceptChannelParamsSchema = z
   .object({
     temporary_channel_id: z.string(),
     funding_amount: fundingLike,
+    shutdown_script: z.unknown().optional(),
+    max_tlc_value_in_flight: fundingLike.optional(),
+    max_tlc_number_in_flight: numericLike.optional(),
+    tlc_min_value: fundingLike.optional(),
+    tlc_fee_proportional_millionths: fundingLike.optional(),
+    tlc_expiry_delta: numericLike.optional(),
   })
   .passthrough();
 
@@ -232,6 +248,8 @@ export type GetPaymentResult = z.infer<typeof getPaymentResultSchema>;
 export const listPaymentsParamsSchema = z
   .object({
     status: z.string().optional(),
+    limit: numericLike.optional(),
+    after: z.string().optional(),
   })
   .partial();
 

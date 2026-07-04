@@ -46,7 +46,7 @@ describe("FiberRpcClient", () => {
       RPC_URL,
       expect.objectContaining({
         method: "POST",
-        body: expect.stringContaining('"method":"node_info"'),
+        body: expect.stringContaining('"method":"node_info","params":{}'),
       }),
     );
   });

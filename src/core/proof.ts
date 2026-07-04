@@ -5,7 +5,13 @@ import type {
   NewInvoiceResult,
   PaymentResult,
 } from "../rpc/types.js";
-import { prepareInboundChannel, type CoordinatorClient, type CoordinatorExecutionResult, type CoordinatorPlan } from "./coordinator.js";
+import {
+  prepareInboundChannel,
+  type AcceptMode,
+  type CoordinatorClient,
+  type CoordinatorExecutionResult,
+  type CoordinatorPlan,
+} from "./coordinator.js";
 import {
   buildReserveAwareQuote,
   formatReserveAwareQuote,
@@ -28,6 +34,7 @@ export interface ProofOptions {
   execute?: boolean;
   timeoutMs?: number;
   pollIntervalMs?: number;
+  acceptMode?: AcceptMode;
 }
 
 export interface ProofPaymentAttempt {
@@ -248,7 +255,7 @@ export async function runPaymentProof(
       receiverPubkey: input.receiverPubkey,
       targetPaymentShannons: input.targetPaymentShannons,
     },
-    { execute: false },
+    { execute: false, acceptMode: options.acceptMode },
     runtime,
   );
 
@@ -393,6 +400,7 @@ export async function runPaymentProof(
       execute: true,
       timeoutMs,
       pollIntervalMs,
+      acceptMode: options.acceptMode,
     },
     runtime,
   );
