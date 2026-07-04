@@ -291,3 +291,14 @@ Decision:
 - The local runbook remains the path for live Fiber execution and proof reproduction.
 - The top-level README now points builders and judges at the package artifacts.
 - No live execute was run.
+
+## 2026-07-05 coordinator safety fix
+
+Decision:
+
+- The coordinator pending-channel lookup is now strict.
+- `findPendingTempId()` returns only an exact expected temporary channel id.
+- If the expected pending channel is missing on the receiver, the execute path fails safely with a readable refusal message instead of accepting an unrelated pending channel.
+- This removes the unsafe `channels[0]` fallback from live execution.
+- Fresh clone audit passed.
+- No live execute was run.

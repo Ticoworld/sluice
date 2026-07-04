@@ -141,11 +141,11 @@ function findChannelByCounterparty(channels: Channel[], counterpartyPubkey: stri
 }
 
 function findPendingTempId(channels: Channel[], expectedTempId?: string): string | undefined {
-  const matching = expectedTempId
-    ? channels.find((channel) => channel.channel_id === expectedTempId)
-    : undefined;
+  if (!expectedTempId) {
+    return undefined;
+  }
 
-  return matching?.channel_id ?? channels[0]?.channel_id;
+  return channels.find((channel) => channel.channel_id === expectedTempId)?.channel_id;
 }
 
 async function resolveReceiverPubkey(
@@ -371,6 +371,18 @@ export async function prepareInboundChannel(
           : clients.receiver.listChannels({ pubkey: servicePubkey, only_pending: true }));
 
         const pendingTempId = findPendingTempId(pendingList.channels, state.temporaryChannelId);
+        if (pendingList.channels.length > 0 && !pendingTempId) {
+          return {
+            mode: "execute",
+            plan,
+            execution: buildExecutionResult(
+              "rpc_error",
+              "Expected pending channel was not found on receiver; refusing to accept an unrelated pending channel.",
+              state,
+            ),
+          };
+        }
+
         if (pendingTempId && !state.manualAcceptAttempted) {
           state.manualAcceptAttempted = true;
           try {

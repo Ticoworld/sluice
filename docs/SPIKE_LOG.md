@@ -696,3 +696,16 @@ Verdict:
 
 - Phase 9D passes as the submission package and static hosted demo replay.
 - The hosted demo replays the recorded Phase 8B proof; the local runbook remains the path for live Fiber execution.
+
+## 2026-07-05 coordinator safety fix
+
+Implementation evidence:
+
+- Fresh clone audit passed.
+- One medium coordinator safety issue was found in `findPendingTempId()`.
+- The unsafe `channels[0]` pending-channel fallback was removed.
+- No live execute was run.
+
+Verdict:
+
+- The coordinator pending-channel lookup is now strict and refuses to accept an unrelated pending channel in execute mode.

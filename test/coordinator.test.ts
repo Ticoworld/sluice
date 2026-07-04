@@ -157,7 +157,7 @@ describe("prepareInboundChannel", () => {
     expect(clients.receiver.acceptChannel).not.toHaveBeenCalled();
   });
 
-  it("delayed ChannelReady succeeds before timeout and uses receiver pending temp id", async () => {
+  it("delayed ChannelReady succeeds before timeout when the expected pending temp id appears", async () => {
     const clients = createClients({
       serviceNodeInfo: makeNodeInfo("02service"),
       servicePeers: makePeer("02receiver"),
@@ -166,7 +166,7 @@ describe("prepareInboundChannel", () => {
         { channels: [makeChannel({ pubkey: "02receiver", channel_id: "0xready-service" })] },
       ],
       receiverPending: [
-        { channels: [makeChannel({ pubkey: "02service", channel_id: "0xreceiver-temp" })] },
+        { channels: [makeChannel({ pubkey: "02service", channel_id: "0xopener-temp" })] },
         { channels: [] },
       ],
       receiverChannels: [
@@ -192,13 +192,43 @@ describe("prepareInboundChannel", () => {
     expect(result.execution?.status).toBe("ready");
     expect(clients.service.openChannel).toHaveBeenCalledTimes(1);
     expect(clients.receiver.acceptChannel).toHaveBeenCalledWith({
-      temporary_channel_id: "0xreceiver-temp",
-      funding_amount: 9_900_000_000n,
-    });
-    expect(clients.receiver.acceptChannel).not.toHaveBeenCalledWith({
       temporary_channel_id: "0xopener-temp",
       funding_amount: 9_900_000_000n,
     });
+  });
+
+  it("fails safely when the expected pending temp id is missing on the receiver", async () => {
+    const clients = createClients({
+      serviceNodeInfo: makeNodeInfo("02service"),
+      servicePeers: makePeer("02receiver"),
+      serviceChannels: [
+        { channels: [] },
+        { channels: [makeChannel({ pubkey: "02receiver", channel_id: "0xready-service" })] },
+      ],
+      receiverPending: [{ channels: [makeChannel({ pubkey: "02service", channel_id: "0xother-temp" })] }],
+      receiverChannels: [
+        { channels: [] },
+        { channels: [makeChannel({ pubkey: "02service", channel_id: "0xready-receiver" })] },
+      ],
+      openResult: { temporary_channel_id: "expected-temp" },
+    });
+
+    const result = await prepareInboundChannel(
+      clients,
+      {
+        serviceNode: "node4",
+        receiverNode: "node3",
+        receiverPubkey: "02receiver",
+        targetPaymentShannons: 100_000_000n,
+      },
+      { execute: true, timeoutMs: 5_000, pollIntervalMs: 1 },
+      createRuntime(),
+    );
+
+    expect(result.execution?.status).toBe("rpc_error");
+    expect(result.execution?.reason).toMatch(/refusing to accept an unrelated pending channel/i);
+    expect(clients.receiver.acceptChannel).not.toHaveBeenCalled();
+    expect(clients.service.openChannel).toHaveBeenCalledTimes(1);
   });
 
   it("returns ready when ChannelReady appears during the final timeout check", async () => {
@@ -216,7 +246,7 @@ describe("prepareInboundChannel", () => {
       servicePeers: makePeer("02receiver"),
       serviceChannels: [{ channels: [] }, { channels: [readyServiceChannel] }],
       receiverPending: [
-        { channels: [makeChannel({ pubkey: "02service", channel_id: "0xreceiver-temp" })] },
+        { channels: [makeChannel({ pubkey: "02service", channel_id: "0xopener-temp" })] },
         { channels: [] },
       ],
       receiverChannels: [{ channels: [] }, { channels: [readyReceiverChannel] }],
