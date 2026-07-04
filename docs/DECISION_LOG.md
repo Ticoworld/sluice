@@ -156,3 +156,13 @@ Decision:
 - The client also now hex-encodes `funding_amount` values to match Fiber’s documented examples.
 - The failure is recorded as implementation evidence, not as a protocol or state problem.
 - A new live execute retry is allowed only after the wire-shape fix is committed and the read-only checks still pass.
+
+## 2026-07-04 Phase 7B live execute result
+
+Decision:
+
+- The live execute path is now confirmed to mutate Fiber state successfully.
+- The node4-node5 channel was opened and accepted, then later observed as `ChannelReady` on both nodes.
+- The coordinator still returned `timeout` because its polling window expired before readiness was observed.
+- Phase 7B is therefore functionally alive, but the command still needs a longer timeout or improved ready detection before it can report success automatically.
+- No additional live execute retry should be treated as necessary for proving the protocol flow itself; the remaining work is coordinator ergonomics and timeout tuning.

@@ -394,3 +394,24 @@ Root cause and fix:
 - `list_channels`, `open_channel`, and `accept_channel` were aligned to the documented Fiber request structure.
 - `funding_amount` values are now encoded as hex strings to match the Fiber examples.
 - The wire-shape fix was verified again with read-only CLI and dry-run checks before the next live retry.
+
+## 2026-07-04 Phase 7B live execute result
+
+Live execute outcome:
+
+- The corrected live `prepare-inbound --execute --yes` attempt progressed into a real channel open/accept flow.
+- `open_channel` returned temporary channel id `0x1f5e94fd57fc40eae858ea77f2cd72f466619034b4da3ae3e6213a09bc32d781`.
+- `accept_channel` returned channel id `0xde3dbbc0dfd615bbc5bd805c2c74230cde079146945f6aab25bb75972db1c53d`.
+- The coordinator reported `timeout` before it observed `ChannelReady`.
+- Read-only follow-up polling showed the new channel on both nodes reached `ChannelReady` after the timeout.
+
+State after the run:
+
+- Node4 now has the new node5 channel in `ChannelReady`.
+- Node5 now has the same new channel in `ChannelReady`.
+- The pre-existing node4-node3 channel remains `ChannelReady`.
+
+Limitations:
+
+- The current coordinator timeout is too short for this live flow.
+- The command still needs a longer poll window or smarter ready detection before it can report success automatically.
