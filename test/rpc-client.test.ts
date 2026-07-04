@@ -266,7 +266,7 @@ describe("FiberRpcClient", () => {
     );
   });
 
-  it("sends a list_payments request with filters", async () => {
+  it("sends a list_payments request with status filter", async () => {
     const fetchImpl = mockFetchOnce({
       jsonrpc: "2.0",
       id: 1,
@@ -277,15 +277,13 @@ describe("FiberRpcClient", () => {
     });
 
     const client = new FiberRpcClient({ url: RPC_URL, fetchImpl });
-    const result = await client.listPayments({ status: "Success", limit: 10, after: "0xafter" });
+    const result = await client.listPayments({ status: "Success" });
 
     expect(result.payments).toEqual([]);
     expect(fetchImpl).toHaveBeenCalledWith(
       RPC_URL,
       expect.objectContaining({
-        body: expect.stringContaining(
-          '"method":"list_payments","params":[{"status":"Success","limit":10,"after":"0xafter"}]',
-        ),
+        body: expect.stringContaining('"method":"list_payments","params":[{"status":"Success"}]'),
       }),
     );
   });

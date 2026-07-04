@@ -200,3 +200,18 @@ Decision:
 - Env-backed receiver resolution works, so a fresh `node7` can be used for the live Phase 8B proof without hardcoded local config changes.
 - Full Phase 8 is not passed yet.
 - Next phase is Phase 8B, the live before/after payment proof runner against a fresh receiver.
+
+## 2026-07-04 Phase 8B live before/after payment proof
+
+Decision:
+
+- Phase 8B is passed.
+- A fresh `node9` receiver was created, funded, and verified as not already ready with node4.
+- The live `prove-payment --execute --yes` run against node4 and node9 successfully proved the full before/after loop:
+  - before-payment failed with no route
+  - reserve-aware channel coordination reached `ChannelReady`
+  - after-payment retry succeeded
+  - receiver invoice became `Paid`
+- The proof runner now retries transient route errors after `ChannelReady`, which was required for the live end-to-end proof.
+- Phase 8 is complete.
+- Next work is whatever productization or documentation the repo owner wants next; the proof spike itself is finished.

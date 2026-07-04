@@ -501,3 +501,49 @@ Limits:
 Next phase:
 
 - Phase 8B, the live before/after payment proof runner against a fresh receiver.
+
+## 2026-07-04 Phase 8B live before/after payment proof
+
+Fresh receiver setup:
+
+- Created a fresh `node9` receiver with RPC `8307` and P2P `8308`.
+- Node9 `node_info` succeeded and reported `auto_accept_channel_ckb_funding_amount: 0x0`.
+- Node9 was funded with 200 CKB.
+- Node4 was connected to node9 as a peer.
+- Before the live execute, node4 and node9 had no existing `ChannelReady` path between them.
+
+Dry-run evidence:
+
+- `npx tsx src/index.ts prove-payment --service node4 --receiver node9 --amount-ckb 1`
+- Dry-run reported `readiness_satisfied: false`.
+- Dry-run reported the expected reserve-aware quote:
+  - opener funding: `120 CKB`
+  - receiver accept funding: `99 CKB`
+- Planned steps were create invoice, fail before payment, open channel, accept pending channel, poll `ChannelReady`, and retry payment.
+
+Live execute evidence:
+
+- One live `prove-payment --execute --yes` attempt was run against node4 and node9.
+- `before_payment` failed with:
+  - `Send payment error: Failed to build route, PathFind error: no path found`
+- `open_channel` returned temporary channel id:
+  - `0xee097073bebf5de069088d65de1b0d5f61ff64e21ecb96552ab79ce1104a47463`
+- Node9 pending inbound was detected and accepted.
+- `accept_channel` returned channel id:
+  - `0x1125001f2711a1d43aab727937def69c41fd760d7671debf3206fea922f54afd7`
+- The coordinator reached `ChannelReady` on both nodes.
+- The after-payment retry succeeded.
+- `payment get_payment` returned `Success`.
+- `invoice get_invoice` on node9 showed `Paid`.
+- The proof runner returned `ready`.
+
+Important implementation note:
+
+- The proof runner now retries transient route errors after `ChannelReady`, which was necessary for this live before/after proof.
+
+Verdict:
+
+- Phase 8B passed.
+- The full before/after payment proof is now complete on a fresh receiver.
+- Cat 3 remains confirmed.
+- The proof runner now demonstrates the live before/after loop end to end.

@@ -232,8 +232,6 @@ export type GetPaymentResult = z.infer<typeof getPaymentResultSchema>;
 export const listPaymentsParamsSchema = z
   .object({
     status: z.string().optional(),
-    limit: numericLike.optional(),
-    after: z.string().optional(),
   })
   .partial();
 

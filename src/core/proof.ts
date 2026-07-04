@@ -157,33 +157,52 @@ async function attemptPayment(
   pollIntervalMs: number,
   runtime: ProofRuntime,
   requireSuccess: boolean,
+  retryRouteErrors = false,
 ): Promise<ProofPaymentAttempt> {
-  try {
-    const result = await client.sendPayment({ invoice: invoiceAddress });
-    const attempt = summarizePayment(result, paymentHash, invoiceAddress);
+  const deadline = runtime.now() + timeoutMs;
+  let lastError: string | undefined;
 
-    if (!requireSuccess || normalizeStatus(result.status) === "success") {
-      return attempt;
-    }
+  while (runtime.now() <= deadline) {
+    try {
+      const result = await client.sendPayment({ invoice: invoiceAddress });
+      const attempt = summarizePayment(result, paymentHash, invoiceAddress);
 
-    const observed = await waitForPaymentStatus(client, paymentHash, invoiceAddress, timeoutMs, pollIntervalMs, runtime);
-    return observed ?? attempt;
-  } catch (error) {
-    const message =
-      error instanceof FiberRpcError
-        ? error.message
-        : error instanceof Error
+      if (!requireSuccess || normalizeStatus(result.status) === "success") {
+        return attempt;
+      }
+
+      const observed = await waitForPaymentStatus(client, paymentHash, invoiceAddress, timeoutMs, pollIntervalMs, runtime);
+      return observed ?? attempt;
+    } catch (error) {
+      const message =
+        error instanceof FiberRpcError
           ? error.message
-          : String(error);
+          : error instanceof Error
+            ? error.message
+            : String(error);
 
-    return {
-      attempted: true,
-      payment_hash: paymentHash,
-      invoice_address: invoiceAddress,
-      status: "error",
-      failed_error: message,
-    };
+      lastError = message;
+      if (!retryRouteErrors || !/no path found|failed to build route|pathfind error/i.test(message)) {
+        return {
+          attempted: true,
+          payment_hash: paymentHash,
+          invoice_address: invoiceAddress,
+          status: "error",
+          failed_error: message,
+        };
+      }
+
+      await runtime.sleep(pollIntervalMs);
+    }
   }
+
+  return {
+    attempted: true,
+    payment_hash: paymentHash,
+    invoice_address: invoiceAddress,
+    status: "error",
+    failed_error: lastError ?? "payment retry timed out",
+  };
 }
 
 function plannedSteps(readiness: ReadinessCheckResult, channelPlan: CoordinatorPlan): string[] {
@@ -411,11 +430,12 @@ export async function runPaymentProof(
     pollIntervalMs,
     runtime,
     true,
+    true,
   );
 
   const receiverInvoice = await clients.receiver.getInvoice(paymentHash);
   const servicePayment = await clients.service.getPayment(paymentHash);
-  const paymentHistory = await clients.service.listPayments({ status: "Success", limit: 50 });
+  const paymentHistory = await clients.service.listPayments({ status: "Success" });
 
   const finalReadiness = await evaluateReadiness(clients.service, {
     serviceNode: input.serviceNode,

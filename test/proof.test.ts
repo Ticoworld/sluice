@@ -183,7 +183,69 @@ describe("runPaymentProof", () => {
     expect(clients.receiver.newInvoice).toHaveBeenCalledTimes(1);
     expect(clients.service.sendPayment).toHaveBeenCalledTimes(2);
     expect(clients.receiver.getInvoice).toHaveBeenCalledWith("0xhash");
-    expect(clients.service.listPayments).toHaveBeenCalledWith({ status: "Success", limit: 50 });
+    expect(clients.service.listPayments).toHaveBeenCalledWith({ status: "Success" });
+  });
+
+  it("retries after-payment route errors until payment succeeds", async () => {
+    mockEvaluateReadiness
+      .mockResolvedValueOnce(makeReadiness("not_ready"))
+      .mockResolvedValueOnce(makeReadiness("ready"));
+    mockPrepareInboundChannel
+      .mockResolvedValueOnce({
+        mode: "dry-run",
+        plan: makePlan(),
+      })
+      .mockResolvedValueOnce({
+        mode: "execute",
+        plan: makePlan(),
+        execution: {
+          status: "ready",
+          reason: "ChannelReady reached",
+          temporary_channel_id: "0xtemp",
+          channel_id: "0xchannel",
+          manual_accept_attempted: true,
+        },
+      });
+
+    const clients = makeClients();
+    clients.service.sendPayment = vi
+      .fn()
+      .mockResolvedValueOnce({
+        payment_hash: "0xhash",
+        status: "Failed",
+        created_at: 1,
+        last_updated_at: 1,
+        failed_error: "no path found",
+        fee: "0",
+        custom_records: null,
+        routers: [],
+      })
+      .mockRejectedValueOnce(new Error("Send payment error: Failed to build route, PathFind error: no path found"))
+      .mockResolvedValueOnce({
+        payment_hash: "0xhash",
+        status: "Success",
+        created_at: 2,
+        last_updated_at: 2,
+        failed_error: null,
+        fee: "0",
+        custom_records: null,
+        routers: [],
+      });
+
+    const result = await runPaymentProof(
+      clients as never,
+      {
+        serviceNode: "node4",
+        receiverNode: "node7",
+        receiverPubkey: "02receiver",
+        targetPaymentShannons: 100_000_000n,
+      },
+      { execute: true, timeoutMs: 1_000, pollIntervalMs: 1 },
+    );
+
+    expect(result.execution?.status).toBe("ready");
+    expect(result.execution?.after_payment.status).toBe("Success");
+    expect(clients.service.sendPayment).toHaveBeenCalledTimes(3);
   });
 
   it("rejects a proof run when the before-payment attempt succeeds unexpectedly", async () => {
