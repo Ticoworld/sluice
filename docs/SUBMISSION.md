@@ -10,19 +10,35 @@ Merchant, Liquidity, LSP, and Multi-Asset Infrastructure
 
 ## Team Members
 
-TODO: add team member names.
+TBD before submission.
 
 ## Repo
 
-TODO: add repository link.
+TBD before submission.
 
 ## Hosted Demo
 
-TODO: add hosted demo link.
+TBD before submission.
 
 ## Video
 
-TODO: add video link.
+TBD before submission.
+
+## Final Submission Checklist
+
+- Team members: TBD
+- Repository link: TBD
+- Hosted demo link: TBD
+- Video link: TBD
+- Technical breakdown: [TECHNICAL_BREAKDOWN.md](TECHNICAL_BREAKDOWN.md)
+- AI allowance claim: TBD if applicable
+
+## Publication Status
+
+- Local proof: complete
+- Static demo: ready
+- Hosted deployment: pending
+- Final submission links: pending
 
 ## Technical Summary
 
@@ -76,5 +92,4 @@ See [ROADMAP.md](ROADMAP.md).
 
 ## AI Allowance Claim
 
-TODO: add the AI allowance claim text if applicable to the submission rules.
-
+TBD if applicable.

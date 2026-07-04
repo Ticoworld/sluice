@@ -39,6 +39,8 @@ The hosted demo is intentionally static. It replays the recorded Phase 8B proof 
 - It does not pretend to execute live Fiber on the hosted page.
 - It shows the recorded proof data from the live local run.
 - It is meant to help judges and builders understand the flow quickly.
+- Deploy the static demo from the repository root or any host that also serves the `docs/` folder, because the demo page links back to the documentation with relative paths.
+- The demo assets are `demo/index.html`, `demo/proof-data.json`, and `demo/README.md`.
 
 ## Recorded Phase 8B Proof
 
@@ -71,4 +73,3 @@ The working quote for the proof case was:
 - Sluice can prepare reserve-aware inbound liquidity.
 - Sluice can retry after `ChannelReady`.
 - Sluice can verify the payment and invoice state after the retry.
-

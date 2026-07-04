@@ -21,3 +21,8 @@ Contents:
 
 The local runbook in `docs/DEMO.md` is what performs the live execution.
 
+## Static Deploy Notes
+
+- Host the repository root or mirror the `docs/` folder alongside this demo folder.
+- The demo page uses relative links back to `docs/SDK.md`, `docs/HTTP_API.md`, `docs/INTEGRATION_GUIDE.md`, and `docs/FIBER_RESERVE_FINDING.md`.
+- The replay data lives in `proof-data.json` and is loaded by `index.html` at runtime.
