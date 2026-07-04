@@ -38,6 +38,14 @@ interface JsonRpcResponse {
   error?: JsonRpcErrorShape;
 }
 
+function encodeJsonRpcValue(_key: string, value: unknown): unknown {
+  if (typeof value === "bigint") {
+    return `0x${value.toString(16)}`;
+  }
+
+  return value;
+}
+
 export class FiberRpcError extends Error {
   readonly code: number;
   readonly data?: unknown;
@@ -76,7 +84,7 @@ export class FiberRpcClient {
     const response = await this.fetchImpl(this.url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(request, (_key, value) => (typeof value === "bigint" ? value.toString() : value)),
+      body: JSON.stringify(request, encodeJsonRpcValue),
     });
 
     if (!response.ok) {

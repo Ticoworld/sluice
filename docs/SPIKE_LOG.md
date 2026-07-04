@@ -390,6 +390,7 @@ Live execute attempt:
 
 Root cause and fix:
 
-- The mutating Fiber RPC methods were using the wrong JSON-RPC param shape.
-- `list_channels`, `open_channel`, and `accept_channel` were aligned to the documented Fiber wire format.
+- The mutating Fiber RPC methods were using the wrong Fiber wire format for live requests.
+- `list_channels`, `open_channel`, and `accept_channel` were aligned to the documented Fiber request structure.
+- `funding_amount` values are now encoded as hex strings to match the Fiber examples.
 - The wire-shape fix was verified again with read-only CLI and dry-run checks before the next live retry.

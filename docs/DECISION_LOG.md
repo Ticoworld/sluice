@@ -153,5 +153,6 @@ Decision:
 - The first live Phase 7B execute failed safely before mutation because the Fiber RPC request body shape was wrong for mutating channel methods.
 - The failure was `RPC error -32602: Invalid params`, with no `open_channel` temp id returned and no pending inbound channel created.
 - The client was corrected to use the documented Fiber JSON-RPC array-style `params` shape for `open_channel`, `accept_channel`, and `list_channels`.
+- The client also now hex-encodes `funding_amount` values to match Fiber’s documented examples.
 - The failure is recorded as implementation evidence, not as a protocol or state problem.
 - A new live execute retry is allowed only after the wire-shape fix is committed and the read-only checks still pass.

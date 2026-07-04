@@ -125,7 +125,7 @@ describe("FiberRpcClient", () => {
       RPC_URL,
       expect.objectContaining({
         body: expect.stringContaining(
-          '"method":"open_channel","params":[{"pubkey":"02abc","funding_amount":"12000000000","public":false,"one_way":false}]',
+          '"method":"open_channel","params":[{"pubkey":"02abc","funding_amount":"0x2cb417800","public":false,"one_way":false}]',
         ),
       }),
     );
@@ -149,7 +149,7 @@ describe("FiberRpcClient", () => {
       RPC_URL,
       expect.objectContaining({
         body: expect.stringContaining(
-          '"method":"accept_channel","params":[{"temporary_channel_id":"0xtemp","funding_amount":"9900000000"}]',
+          '"method":"accept_channel","params":[{"temporary_channel_id":"0xtemp","funding_amount":"0x24e160300"}]',
         ),
       }),
     );
