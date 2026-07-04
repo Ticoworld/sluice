@@ -10,28 +10,28 @@ Merchant, Liquidity, LSP, and Multi-Asset Infrastructure
 
 ## Team Members
 
-TBD before submission.
+Timothy Orichi
 
 ## Repo
 
-TBD before submission.
+<your public GitHub repo link>
 
 ## Hosted Demo
 
-TBD before submission.
+<your deployed static demo link>
 
 ## Video
 
-TBD before submission.
+<your YouTube/Loom/Drive video link>
 
 ## Final Submission Checklist
 
-- Team members: TBD
-- Repository link: TBD
-- Hosted demo link: TBD
-- Video link: TBD
+- Team members: Timothy Orichi
+- Repository link: <your public GitHub repo link>
+- Hosted demo link: <your deployed static demo link>
+- Video link: <your YouTube/Loom/Drive video link>
 - Technical breakdown: [TECHNICAL_BREAKDOWN.md](TECHNICAL_BREAKDOWN.md)
-- AI allowance claim: TBD if applicable
+- AI allowance claim: yes
 
 ## Publication Status
 
@@ -92,4 +92,4 @@ See [ROADMAP.md](ROADMAP.md).
 
 ## AI Allowance Claim
 
-TBD if applicable.
+AI assistance was used for research, planning, code review, documentation drafting, and debugging support. All live Fiber tests, verification steps, commit gates, and submission decisions were human-directed and manually reviewed. AI usage allowance claim: yes.
