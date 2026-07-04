@@ -4,6 +4,7 @@ import { buildReserveAwareQuote, formatReserveAwareQuote } from "./core/quote.js
 import { runPaymentProof } from "./core/proof.js";
 import { ckbToShannons, parseShannons } from "./core/reserve.js";
 import { evaluateReadiness } from "./core/readiness.js";
+import { startSluiceHttpServer } from "./http/server.js";
 import { FiberRpcClient } from "./rpc/client.js";
 import { loadNodeConfig } from "./config.js";
 
@@ -213,6 +214,31 @@ export function buildCli(): Command {
       );
 
       console.log(JSON.stringify(result, null, 2));
+    });
+
+  program
+    .command("serve")
+    .description("Start the HTTP service API")
+    .option("--port <port>", "HTTP port", (value) => Number(value), 8787)
+    .option("--host <host>", "HTTP host", "127.0.0.1")
+    .action(async (options: { port: number; host: string }) => {
+      const server = await startSluiceHttpServer({
+        port: options.port,
+        host: options.host,
+      });
+
+      console.log(`Sluice HTTP API listening on ${server.url}`);
+
+      const shutdown = async () => {
+        await server.close();
+      };
+
+      process.once("SIGINT", shutdown);
+      process.once("SIGTERM", shutdown);
+
+      await new Promise<void>((resolve) => {
+        server.server.once("close", resolve);
+      });
     });
 
   return program;

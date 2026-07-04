@@ -616,3 +616,41 @@ Verdict:
 - Phase 9A passes as the public SDK foundation.
 - The SDK is now the reusable developer-facing surface for quote, readiness, prepare, and proof flows.
 - The next phase can focus on broader packaging or higher-level developer API polish, not more protocol discovery.
+
+## 2026-07-04 Phase 9B HTTP service API
+
+Implementation evidence:
+
+- Added a small HTTP API that wraps the SDK instead of duplicating coordinator or proof logic.
+- Added endpoints:
+  - `GET /health`
+  - `POST /v1/quote`
+  - `POST /v1/readiness`
+  - `POST /v1/prepare`
+  - `POST /v1/prove-payment`
+- Added a `serve` CLI command with default port `8787`.
+- Added request validation and explicit safety checks so live mutation still requires `execute: true` and `yes: true`.
+- Added `docs/HTTP_API.md` and updated the repo map in `README.md`.
+
+Smoke evidence:
+
+- `npx tsc --noEmit` passed.
+- `npx vitest run` passed.
+- `npx tsx src/index.ts serve --port 8787` started the local HTTP server.
+- `curl.exe http://127.0.0.1:8787/health` returned:
+  - `ok: true`
+  - `service: sluice`
+  - `mode: http`
+- `curl.exe -X POST http://127.0.0.1:8787/v1/quote` with `{"amountCkb":"1"}` returned the reserve-aware quote:
+  - target payment: 1 CKB
+  - receiver reserve: 99 CKB
+  - receiver accept funding: 99 CKB
+  - opener funding: 120 CKB
+  - estimated usable liquidity: 21 CKB
+- No live execute endpoint was called.
+
+Verdict:
+
+- Phase 9B passes as the HTTP service API foundation.
+- Sluice is now callable through a small HTTP layer for wallets, merchant backends, dashboards, hosted demos, and external services.
+- The HTTP layer remains read-only by default and keeps mutation behind explicit confirmation.

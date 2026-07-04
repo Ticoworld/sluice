@@ -246,3 +246,20 @@ Decision:
 - Live mutation still requires explicit `execute: true` plus `yes: true`.
 - The RPC client now uses single-object JSON-RPC params arrays to match the live Fiber wire format.
 - Next work can focus on packaging or higher-level ergonomics, not on more spike discovery.
+
+## 2026-07-04 Phase 9B HTTP service API
+
+Decision:
+
+- Phase 9B passes as the HTTP service API foundation.
+- Sluice now exposes a small HTTP layer that wraps the SDK instead of duplicating core logic.
+- The server exposes:
+  - `GET /health`
+  - `POST /v1/quote`
+  - `POST /v1/readiness`
+  - `POST /v1/prepare`
+  - `POST /v1/prove-payment`
+- Dry-run remains the default behavior.
+- Live mutation still requires `execute: true` and `yes: true`.
+- The default local server port is `8787`.
+- The HTTP layer is intended as the integration surface for wallets, merchant backends, hosted demos, and external services.

@@ -22,3 +22,4 @@ Status: prep-week spike.
 - [docs/DECISION_LOG.md](docs/DECISION_LOG.md): dated scope and direction decisions.
 - [docs/SPIKE_LOG.md](docs/SPIKE_LOG.md): spike notes and measurement log.
 - [docs/SDK.md](docs/SDK.md): public SDK usage, safety model, and examples.
+- [docs/HTTP_API.md](docs/HTTP_API.md): HTTP service API, endpoint list, safety model, and curl examples.
