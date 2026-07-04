@@ -145,3 +145,13 @@ Decision:
 - Node4 was connected to node5 and the coordinator dry-run reported the expected reserve-aware 120 CKB opener / 99 CKB receiver plan.
 - The dry-run remained read-only, reported `not_ready`, and did not mutate live Fiber state.
 - No live `--execute` run has occurred yet, so Phase 7B live execution is still pending.
+
+## 2026-07-04 Phase 7B RPC wire-shape failure
+
+Decision:
+
+- The first live Phase 7B execute failed safely before mutation because the Fiber RPC request body shape was wrong for mutating channel methods.
+- The failure was `RPC error -32602: Invalid params`, with no `open_channel` temp id returned and no pending inbound channel created.
+- The client was corrected to use the documented Fiber JSON-RPC array-style `params` shape for `open_channel`, `accept_channel`, and `list_channels`.
+- The failure is recorded as implementation evidence, not as a protocol or state problem.
+- A new live execute retry is allowed only after the wire-shape fix is committed and the read-only checks still pass.

@@ -376,3 +376,20 @@ Limitations:
 Next phase:
 
 - Phase 7B live execute smoke test against node4 and node5.
+
+## 2026-07-04 Phase 7B RPC wire-shape failure
+
+Live execute attempt:
+
+- One live `prepare-inbound --execute --yes` attempt was run against node4 and node5.
+- The request failed safely before any channel mutation.
+- Fiber returned `RPC error -32602: Invalid params`.
+- No `open_channel` temporary id was returned.
+- Node5 did not show a pending inbound channel.
+- Node4 and node5 channel state remained unchanged after the failed execute.
+
+Root cause and fix:
+
+- The mutating Fiber RPC methods were using the wrong JSON-RPC param shape.
+- `list_channels`, `open_channel`, and `accept_channel` were aligned to the documented Fiber wire format.
+- The wire-shape fix was verified again with read-only CLI and dry-run checks before the next live retry.

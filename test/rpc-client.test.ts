@@ -100,7 +100,7 @@ describe("FiberRpcClient", () => {
     expect(fetchImpl).toHaveBeenCalledWith(
       RPC_URL,
       expect.objectContaining({
-        body: expect.stringContaining('"params":{"params":{"include_closed":true,"only_pending":false}}'),
+        body: expect.stringContaining('"params":[{"include_closed":true,"only_pending":false}]'),
       }),
     );
   });
@@ -124,7 +124,9 @@ describe("FiberRpcClient", () => {
     expect(fetchImpl).toHaveBeenCalledWith(
       RPC_URL,
       expect.objectContaining({
-        body: expect.stringContaining('"method":"open_channel"'),
+        body: expect.stringContaining(
+          '"method":"open_channel","params":[{"pubkey":"02abc","funding_amount":"12000000000","public":false,"one_way":false}]',
+        ),
       }),
     );
   });
@@ -146,7 +148,9 @@ describe("FiberRpcClient", () => {
     expect(fetchImpl).toHaveBeenCalledWith(
       RPC_URL,
       expect.objectContaining({
-        body: expect.stringContaining('"method":"accept_channel"'),
+        body: expect.stringContaining(
+          '"method":"accept_channel","params":[{"temporary_channel_id":"0xtemp","funding_amount":"9900000000"}]',
+        ),
       }),
     );
   });

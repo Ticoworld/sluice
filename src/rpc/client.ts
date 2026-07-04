@@ -102,7 +102,7 @@ export class FiberRpcClient {
 
   listChannels(params: ListChannelsParams = {}): Promise<ListChannelsResult> {
     const validParams = listChannelsParamsSchema.parse(params);
-    return this.call("list_channels", { params: validParams }, listChannelsResultSchema);
+    return this.call("list_channels", [validParams], listChannelsResultSchema);
   }
 
   listPendingChannels(params: Omit<ListChannelsParams, "only_pending"> = {}): Promise<ListChannelsResult> {
@@ -111,11 +111,11 @@ export class FiberRpcClient {
 
   openChannel(params: OpenChannelParams): Promise<OpenChannelResult> {
     const validParams = openChannelParamsSchema.parse(params);
-    return this.call("open_channel", validParams, openChannelResultSchema);
+    return this.call("open_channel", [validParams], openChannelResultSchema);
   }
 
   acceptChannel(params: AcceptChannelParams): Promise<AcceptChannelResult> {
     const validParams = acceptChannelParamsSchema.parse(params);
-    return this.call("accept_channel", validParams, acceptChannelResultSchema);
+    return this.call("accept_channel", [validParams], acceptChannelResultSchema);
   }
 }
