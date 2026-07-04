@@ -263,3 +263,14 @@ Decision:
 - Live mutation still requires `execute: true` and `yes: true`.
 - The default local server port is `8787`.
 - The HTTP layer is intended as the integration surface for wallets, merchant backends, hosted demos, and external services.
+
+## 2026-07-04 Phase 9C examples and protocol docs
+
+Decision:
+
+- Phase 9C passes as the examples and protocol-finding documentation phase.
+- Sluice now includes builder-facing examples for the SDK and HTTP API.
+- Sluice now includes an integration guide and a reserve finding doc so the practical Fiber blocker is visible without reading the entire spike history.
+- The repo map points builders at the new examples and docs.
+- Example TypeScript files are type-checked by including `examples` in `tsconfig.json`.
+- No live execute was run.

@@ -654,3 +654,25 @@ Verdict:
 - Phase 9B passes as the HTTP service API foundation.
 - Sluice is now callable through a small HTTP layer for wallets, merchant backends, dashboards, hosted demos, and external services.
 - The HTTP layer remains read-only by default and keeps mutation behind explicit confirmation.
+
+## 2026-07-04 Phase 9C examples and protocol docs
+
+Implementation evidence:
+
+- Added builder-facing examples for the SDK quote and dry-run prepare flows.
+- Added HTTP curl examples for the read-only and guarded mutation routes.
+- Added a merchant integration README that shows the intended checkout pattern without creating a full app.
+- Added protocol finding and integration guide docs so builders can understand the reserve-aware model without reading spike logs.
+- Updated the repo map in `README.md` to point builders at the new docs and examples.
+- Added `examples` to the TypeScript include set so example `.ts` files are type-checked.
+
+Smoke evidence:
+
+- `npx tsc --noEmit` passed.
+- `npx vitest run` passed.
+- No live execute was run.
+
+Verdict:
+
+- Phase 9C passes as examples plus protocol finding documentation.
+- Sluice is now easier for another builder to understand, copy, and integrate without re-learning the reserve blocker from scratch.
