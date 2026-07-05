@@ -316,3 +316,13 @@ Decision:
   - `import { Sluice } from "sluice/sdk"`
   - `require("sluice/sdk")`
 - No live execute was run.
+
+## 2026-07-05 deployment and merchant integration docs
+
+Decision:
+
+- The deployment story is now explicit in `DEPLOYMENT.md`.
+- The merchant checkout flow is now shown concretely in `examples/merchant-checkout/checkout-flow.ts`.
+- The repo now explains how an operator, merchant backend, or wallet backend should use Sluice in practice.
+- The hosted demo remains replay-based rather than a live Fiber executor.
+- No live execute was run.

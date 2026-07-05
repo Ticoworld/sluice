@@ -722,3 +722,16 @@ Implementation evidence:
 Verdict:
 
 - The SDK package boundary is now proven for both `import` and `require` consumers.
+
+## 2026-07-05 deployment and merchant integration docs
+
+Implementation evidence:
+
+- Added a deployment guide that explains operator mode, merchant backend mode, wallet/backend SDK mode, and public versus private deployment boundaries.
+- Added a concrete merchant checkout flow example that shows a payment failure, a Sluice prepare call, and a payment retry after `ChannelReady`.
+- Updated the repo map and integration guide links.
+- No live execute was run.
+
+Verdict:
+
+- The deployment story is now explicit and the merchant integration pattern is concrete enough for builders and judges to follow.

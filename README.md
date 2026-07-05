@@ -27,12 +27,13 @@ Status: submission package.
 ## For Builders
 
 - [docs/INTEGRATION_GUIDE.md](docs/INTEGRATION_GUIDE.md): when to use CLI, SDK, or HTTP and how the safety model works.
+- [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md): recommended operator, merchant, and wallet deployment patterns.
 - [docs/FIBER_RESERVE_FINDING.md](docs/FIBER_RESERVE_FINDING.md): the reserve-aware Fiber finding that shaped the Sluice quote and prepare flow.
 - [docs/SDK.md](docs/SDK.md): SDK usage from source or as an installed package for ESM, TypeScript, and CommonJS consumers.
 - [examples/sdk/quote.ts](examples/sdk/quote.ts): SDK quote example for the 1 CKB proof case.
 - [examples/sdk/prepare-dry-run.ts](examples/sdk/prepare-dry-run.ts): SDK dry-run prepare example with detect mode.
+- [examples/merchant-checkout/checkout-flow.ts](examples/merchant-checkout/checkout-flow.ts): concrete merchant retry flow that calls Sluice before retrying payment.
 - [examples/http/curl.md](examples/http/curl.md): curl examples for the HTTP API.
-- [examples/merchant-checkout/README.md](examples/merchant-checkout/README.md): tiny merchant integration story showing the intended usage pattern.
 
 ## Submission Package
 

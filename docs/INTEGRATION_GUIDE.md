@@ -106,4 +106,5 @@ An operator or LSP-style service can run Sluice around a service Fiber node:
 - [SDK quote example](../examples/sdk/quote.ts)
 - [SDK prepare example](../examples/sdk/prepare-dry-run.ts)
 - [HTTP curl examples](../examples/http/curl.md)
-- [Merchant integration sketch](../examples/merchant-checkout/README.md)
+- [Merchant checkout flow example](../examples/merchant-checkout/checkout-flow.ts)
+- [Deployment guide](DEPLOYMENT.md)

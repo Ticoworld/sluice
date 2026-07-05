@@ -9,37 +9,13 @@ Goal:
 3. The merchant backend asks Sluice to prepare reserve-aware inbound liquidity.
 4. The payment retry succeeds after `ChannelReady`.
 
-## Sketch
+## Concrete Example
 
-```ts
-// Pseudo-code only.
-// The merchant backend can call Sluice over HTTP or via the SDK.
+See [`checkout-flow.ts`](checkout-flow.ts) for a runnable integration sketch that shows:
 
-const readiness = await fetch("http://127.0.0.1:8787/v1/readiness", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    serviceRpcUrl: "http://127.0.0.1:8257",
-    receiverRpcUrl: "http://127.0.0.1:8287",
-    amountCkb: "1",
-  }),
-});
-
-if (!(await readiness.json()).readiness.channel_ready) {
-  await fetch("http://127.0.0.1:8787/v1/prepare", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      serviceRpcUrl: "http://127.0.0.1:8257",
-      receiverRpcUrl: "http://127.0.0.1:8287",
-      amountCkb: "1",
-      acceptMode: "detect",
-    }),
-  });
-}
-
-// The merchant retries the original payment after Sluice has prepared the path.
-```
+- a failed payment attempt
+- a Sluice prepare call
+- a successful retry after preparation
 
 ## Why This Pattern Matters
 
