@@ -302,3 +302,17 @@ Decision:
 - This removes the unsafe `channels[0]` fallback from live execution.
 - Fresh clone audit passed.
 - No live execute was run.
+
+## 2026-07-05 package-boundary audit
+
+Decision:
+
+- The SDK package boundary is now supported for ESM, TypeScript, and CommonJS consumers.
+- The package exports both `import` and `require` targets from the root and `./sdk` subpath.
+- `npm pack` now produces a tarball that external consumers can install and use without touching repo source paths.
+- External consumer checks confirmed:
+  - `import { Sluice } from "sluice"`
+  - `require("sluice")`
+  - `import { Sluice } from "sluice/sdk"`
+  - `require("sluice/sdk")`
+- No live execute was run.

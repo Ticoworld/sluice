@@ -10,6 +10,23 @@ In this repo, import the SDK from source:
 import { Sluice } from "./src/sdk/index.js";
 ```
 
+## Package Usage
+
+When Sluice is installed as a package or consumed from an `npm pack` tarball:
+
+```ts
+import { Sluice } from "sluice";
+```
+
+The package root re-exports the SDK entry, and the `sluice/sdk` subpath is also available for direct SDK imports.
+CommonJS consumers can use:
+
+```js
+const { Sluice } = require("sluice");
+```
+
+The same pattern works for `require("sluice/sdk")`.
+
 Create one SDK instance for the service node you want to operate:
 
 ```ts

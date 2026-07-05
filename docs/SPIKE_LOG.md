@@ -709,3 +709,16 @@ Implementation evidence:
 Verdict:
 
 - The coordinator pending-channel lookup is now strict and refuses to accept an unrelated pending channel in execute mode.
+
+## 2026-07-05 package-boundary audit
+
+Implementation evidence:
+
+- Added package exports for ESM and CommonJS consumers.
+- Added a dual-build package configuration so `npm pack` emits `dist/package.js`, `dist/package.cjs`, `dist/sdk/index.js`, and `dist/sdk/index.cjs`.
+- Verified external ESM, TypeScript, and CommonJS consumers against the packed tarball.
+- No live execute was run.
+
+Verdict:
+
+- The SDK package boundary is now proven for both `import` and `require` consumers.

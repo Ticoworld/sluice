@@ -28,6 +28,7 @@ Status: submission package.
 
 - [docs/INTEGRATION_GUIDE.md](docs/INTEGRATION_GUIDE.md): when to use CLI, SDK, or HTTP and how the safety model works.
 - [docs/FIBER_RESERVE_FINDING.md](docs/FIBER_RESERVE_FINDING.md): the reserve-aware Fiber finding that shaped the Sluice quote and prepare flow.
+- [docs/SDK.md](docs/SDK.md): SDK usage from source or as an installed package for ESM, TypeScript, and CommonJS consumers.
 - [examples/sdk/quote.ts](examples/sdk/quote.ts): SDK quote example for the 1 CKB proof case.
 - [examples/sdk/prepare-dry-run.ts](examples/sdk/prepare-dry-run.ts): SDK dry-run prepare example with detect mode.
 - [examples/http/curl.md](examples/http/curl.md): curl examples for the HTTP API.

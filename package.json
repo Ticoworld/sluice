@@ -1,9 +1,30 @@
 {
   "name": "sluice",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Reserve-aware JIT inbound liquidity primitive for Fiber",
+  "type": "module",
+  "main": "./dist/package.cjs",
+  "module": "./dist/package.js",
+  "types": "./dist/package.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/package.d.ts",
+      "import": "./dist/package.js",
+      "require": "./dist/package.cjs"
+    },
+    "./sdk": {
+      "types": "./dist/sdk/index.d.ts",
+      "import": "./dist/sdk/index.js",
+      "require": "./dist/sdk/index.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "scripts": {
+    "build": "tsup",
+    "prepack": "npm run build",
     "test": "vitest run",
     "dev": "tsx src/index.ts",
     "spike": "tsx scripts/spike-channel-open.ts"
@@ -11,7 +32,6 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "module",
   "dependencies": {
     "commander": "^15.0.0",
     "dotenv": "^17.4.2",
@@ -19,6 +39,7 @@
   },
   "devDependencies": {
     "@types/node": "^26.0.1",
+    "tsup": "^8.5.0",
     "tsx": "^4.22.4",
     "typescript": "^6.0.3",
     "vitest": "^4.1.9"
