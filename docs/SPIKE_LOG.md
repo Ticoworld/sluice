@@ -735,3 +735,18 @@ Implementation evidence:
 Verdict:
 
 - The deployment story is now explicit and the merchant integration pattern is concrete enough for builders and judges to follow.
+
+## 2026-07-08 infrastructure hardening
+
+Implementation evidence:
+
+- Added a read-only `doctor` CLI command for service and receiver diagnostics.
+- Added an OpenAPI contract for the HTTP surface.
+- Added a Dockerfile, `.dockerignore`, and `.env.example` for a repeatable container/deployment surface.
+- Added a GitHub Actions workflow that runs build, typecheck, and tests.
+- Added a package-smoke script that proves external ESM, TypeScript, and CommonJS consumers still work from `npm pack`.
+- No live execute was run.
+
+Verdict:
+
+- The repo now has a stronger infrastructure trust layer for judges and future Fiber builders.

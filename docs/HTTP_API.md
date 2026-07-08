@@ -23,6 +23,8 @@ Hosted or demo deployments should intentionally choose a non-default host and po
 - `POST /v1/prepare`
 - `POST /v1/prove-payment`
 
+OpenAPI spec: [openapi.yaml](openapi.yaml)
+
 ## Safety Model
 
 - Dry-run is the default for prepare and prove-payment.

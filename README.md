@@ -35,6 +35,15 @@ Status: submission package.
 - [examples/merchant-checkout/checkout-flow.ts](examples/merchant-checkout/checkout-flow.ts): concrete merchant retry flow that calls Sluice before retrying payment.
 - [examples/http/curl.md](examples/http/curl.md): curl examples for the HTTP API.
 
+## Infrastructure Readiness
+
+- [src/cli.ts](src/cli.ts): CLI entrypoint with `doctor`, quote, readiness, prepare, and proof commands.
+- [docs/openapi.yaml](docs/openapi.yaml): OpenAPI contract for the HTTP surface.
+- [Dockerfile](Dockerfile): container recipe for the Sluice HTTP service on port 8787.
+- [.env.example](.env.example): sample local node URL environment values without secrets.
+- [.github/workflows/ci.yml](.github/workflows/ci.yml): build, typecheck, and test CI workflow.
+- [scripts/package-smoke.mjs](scripts/package-smoke.mjs): npm pack and external consumer smoke test.
+
 ## Submission Package
 
 - [docs/DEMO.md](docs/DEMO.md): one-page demo summary, local runbook, and recorded proof replay notes.

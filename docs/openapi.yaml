@@ -1,0 +1,450 @@
+openapi: 3.1.0
+info:
+  title: Sluice HTTP API
+  version: 1.0.0
+  description: >
+    Sluice wraps the proven SDK and coordinator flows behind a small HTTP
+    service for wallets, merchant backends, and local operator tooling.
+servers:
+  - url: http://127.0.0.1:8787
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+              example:
+                ok: true
+                service: sluice
+                mode: http
+  /v1/quote:
+    post:
+      summary: Calculate a reserve-aware quote
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AmountRequest"
+            examples:
+              ckb:
+                summary: 1 CKB quote
+                value:
+                  amountCkb: "1"
+      responses:
+        "200":
+          description: Quote response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuoteResponse"
+              example:
+                ok: true
+                quote:
+                  target_payment:
+                    shannons: "100000000"
+                    ckb: "1 CKB"
+                  receiver_reserve_required:
+                    shannons: "9900000000"
+                    ckb: "99 CKB"
+                  receiver_accept_funding:
+                    shannons: "9900000000"
+                    ckb: "99 CKB"
+                  fee_headroom:
+                    shannons: "2000000000"
+                    ckb: "20 CKB"
+                  minimum_opener_funding:
+                    shannons: "12000000000"
+                    ckb: "120 CKB"
+                  recommended_opener_funding:
+                    shannons: "12000000000"
+                    ckb: "120 CKB"
+                  estimated_usable_liquidity:
+                    shannons: "2100000000"
+                    ckb: "21 CKB"
+                  explanation: Reserve-aware testnet quote based on the proved manual Phase 3B flow.
+        "400":
+          $ref: "#/components/responses/BadRequest"
+  /v1/readiness:
+    post:
+      summary: Check whether a receiver can be paid right now
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReadinessRequest"
+            examples:
+              readiness:
+                summary: Readiness check
+                value:
+                  serviceRpcUrl: http://127.0.0.1:8257
+                  receiverRpcUrl: http://127.0.0.1:8287
+                  amountCkb: "1"
+      responses:
+        "200":
+          description: Readiness response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReadinessResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+  /v1/prepare:
+    post:
+      summary: Prepare reserve-aware inbound liquidity
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PrepareRequest"
+            examples:
+              dryRun:
+                summary: Dry-run prepare
+                value:
+                  serviceRpcUrl: http://127.0.0.1:8257
+                  receiverRpcUrl: http://127.0.0.1:8287
+                  amountCkb: "1"
+                  acceptMode: detect
+      responses:
+        "200":
+          description: Prepare response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PrepareResponse"
+        "400":
+          description: Readable safety or validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                executeWithoutYes:
+                  summary: Live mutation without confirmation
+                  value:
+                    ok: false
+                    error:
+                      code: BAD_REQUEST
+                      message: execute=true requires yes=true
+  /v1/prove-payment:
+    post:
+      summary: Run the before/after payment proof
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProvePaymentRequest"
+            examples:
+              dryRun:
+                summary: Dry-run proof
+                value:
+                  serviceRpcUrl: http://127.0.0.1:8257
+                  receiverRpcUrl: http://127.0.0.1:8287
+                  amountCkb: "1"
+      responses:
+        "200":
+          description: Proof response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProofResponse"
+        "400":
+          description: Readable safety or validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                executeWithoutYes:
+                  summary: Live mutation without confirmation
+                  value:
+                    ok: false
+                    error:
+                      code: BAD_REQUEST
+                      message: execute=true requires yes=true
+components:
+  responses:
+    BadRequest:
+      description: Readable validation or safety error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            ok: false
+            error:
+              code: BAD_REQUEST
+              message: Request body must be valid JSON.
+  schemas:
+    HealthResponse:
+      type: object
+      required: [ok, service, mode]
+      properties:
+        ok:
+          type: boolean
+        service:
+          type: string
+        mode:
+          type: string
+      additionalProperties: false
+    AmountRequest:
+      type: object
+      properties:
+        amountCkb:
+          type: string
+          minLength: 1
+        amountShannons:
+          type: string
+          minLength: 1
+      additionalProperties: false
+      oneOf:
+        - required: [amountCkb]
+          not:
+            required: [amountShannons]
+        - required: [amountShannons]
+          not:
+            required: [amountCkb]
+    ReadinessRequest:
+      type: object
+      required: [serviceRpcUrl, receiverRpcUrl]
+      properties:
+        serviceRpcUrl:
+          type: string
+          format: uri
+        receiverRpcUrl:
+          type: string
+          format: uri
+        receiverPubkey:
+          type: string
+          minLength: 1
+        amountCkb:
+          type: string
+          minLength: 1
+        amountShannons:
+          type: string
+          minLength: 1
+      additionalProperties: false
+      oneOf:
+        - required: [amountCkb]
+          not:
+            required: [amountShannons]
+        - required: [amountShannons]
+          not:
+            required: [amountCkb]
+    PrepareRequest:
+      type: object
+      required: [serviceRpcUrl, receiverRpcUrl]
+      properties:
+        serviceRpcUrl:
+          type: string
+          format: uri
+        receiverRpcUrl:
+          type: string
+          format: uri
+        receiverPubkey:
+          type: string
+          minLength: 1
+        acceptMode:
+          type: string
+          enum: [detect, manual, auto]
+        execute:
+          type: boolean
+        yes:
+          type: boolean
+        timeoutMs:
+          type: integer
+          minimum: 1
+        pollIntervalMs:
+          type: integer
+          minimum: 1
+        amountCkb:
+          type: string
+          minLength: 1
+        amountShannons:
+          type: string
+          minLength: 1
+      additionalProperties: false
+      oneOf:
+        - required: [amountCkb]
+          not:
+            required: [amountShannons]
+        - required: [amountShannons]
+          not:
+            required: [amountCkb]
+    ProvePaymentRequest:
+      type: object
+      required: [serviceRpcUrl, receiverRpcUrl]
+      properties:
+        serviceRpcUrl:
+          type: string
+          format: uri
+        receiverRpcUrl:
+          type: string
+          format: uri
+        receiverPubkey:
+          type: string
+          minLength: 1
+        acceptMode:
+          type: string
+          enum: [detect, manual, auto]
+        execute:
+          type: boolean
+        yes:
+          type: boolean
+        timeoutMs:
+          type: integer
+          minimum: 1
+        pollIntervalMs:
+          type: integer
+          minimum: 1
+        amountCkb:
+          type: string
+          minLength: 1
+        amountShannons:
+          type: string
+          minLength: 1
+      additionalProperties: false
+      oneOf:
+        - required: [amountCkb]
+          not:
+            required: [amountShannons]
+        - required: [amountShannons]
+          not:
+            required: [amountCkb]
+    QuoteAmount:
+      type: object
+      required: [shannons, ckb]
+      properties:
+        shannons:
+          type: string
+        ckb:
+          type: string
+      additionalProperties: false
+    PrintableReserveAwareQuote:
+      type: object
+      required:
+        - target_payment
+        - receiver_reserve_required
+        - receiver_accept_funding
+        - fee_headroom
+        - minimum_opener_funding
+        - recommended_opener_funding
+        - estimated_usable_liquidity
+        - explanation
+      properties:
+        target_payment:
+          $ref: "#/components/schemas/QuoteAmount"
+        receiver_reserve_required:
+          $ref: "#/components/schemas/QuoteAmount"
+        receiver_accept_funding:
+          $ref: "#/components/schemas/QuoteAmount"
+        fee_headroom:
+          $ref: "#/components/schemas/QuoteAmount"
+        minimum_opener_funding:
+          $ref: "#/components/schemas/QuoteAmount"
+        recommended_opener_funding:
+          $ref: "#/components/schemas/QuoteAmount"
+        estimated_usable_liquidity:
+          $ref: "#/components/schemas/QuoteAmount"
+        explanation:
+          type: string
+      additionalProperties: false
+    QuoteResponse:
+      type: object
+      required: [ok, quote]
+      properties:
+        ok:
+          type: boolean
+        quote:
+          $ref: "#/components/schemas/PrintableReserveAwareQuote"
+      additionalProperties: false
+    ReadinessResponse:
+      type: object
+      required: [ok, readiness]
+      properties:
+        ok:
+          type: boolean
+        readiness:
+          type: object
+          required:
+            - service_node
+            - receiver_pubkey
+            - receiver_reachable
+            - peer_connected
+            - channel_ready
+            - outbound_liquidity_sufficient
+            - readiness_status
+            - reason
+            - recommended_quote
+          properties:
+            service_node:
+              type: string
+            receiver_pubkey:
+              type: string
+            service_node_pubkey:
+              type: string
+            receiver_reachable:
+              type: boolean
+            peer_connected:
+              type: boolean
+            channel_ready:
+              type: boolean
+            outbound_liquidity_sufficient:
+              oneOf:
+                - type: boolean
+                - type: string
+                  const: unknown
+            readiness_status:
+              type: string
+              enum: [ready, not_ready, unknown]
+            reason:
+              type: string
+            recommended_quote:
+              $ref: "#/components/schemas/PrintableReserveAwareQuote"
+          additionalProperties: true
+      additionalProperties: false
+    PrepareResponse:
+      type: object
+      required: [ok, prepare]
+      properties:
+        ok:
+          type: boolean
+        prepare:
+          type: object
+          additionalProperties: true
+      additionalProperties: false
+    ProofResponse:
+      type: object
+      required: [ok, proof]
+      properties:
+        ok:
+          type: boolean
+        proof:
+          type: object
+          additionalProperties: true
+      additionalProperties: false
+    ErrorResponse:
+      type: object
+      required: [ok, error]
+      properties:
+        ok:
+          type: boolean
+          const: false
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+          additionalProperties: false
+      additionalProperties: false

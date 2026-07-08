@@ -1,5 +1,7 @@
 import { Command } from "commander";
 import { prepareInboundChannel } from "./core/coordinator.js";
+import type { AcceptMode } from "./core/coordinator.js";
+import { runDoctor } from "./core/doctor.js";
 import { buildReserveAwareQuote, formatReserveAwareQuote } from "./core/quote.js";
 import { runPaymentProof } from "./core/proof.js";
 import { ckbToShannons, parseShannons } from "./core/reserve.js";
@@ -97,6 +99,46 @@ export function buildCli(): Command {
         receiverPubkey: options.receiverPubkey,
         targetPaymentShannons,
       });
+
+      console.log(JSON.stringify(result, null, 2));
+    });
+
+  program
+    .command("doctor")
+    .description("Run a read-only infrastructure check for a service and receiver pair")
+    .requiredOption("--service <node>", "configured service node name (e.g. node4)")
+    .requiredOption("--receiver <node>", "configured receiver node name (e.g. node3)")
+    .option("--amount-ckb <amount>", "target payment amount in CKB")
+    .option("--amount-shannons <amount>", "target payment amount in shannons")
+    .option("--accept-mode <mode>", "reported coordinator accept mode", "detect")
+    .action(async (options: {
+      service: string;
+      receiver: string;
+      amountCkb?: string;
+      amountShannons?: string;
+      acceptMode: AcceptMode;
+    }) => {
+      const targetPaymentShannons = parseTargetPaymentShannons({
+        amountCkb: options.amountCkb,
+        amountShannons: options.amountShannons,
+      });
+
+      if (options.acceptMode !== "detect" && options.acceptMode !== "manual" && options.acceptMode !== "auto") {
+        program.error("Provide --accept-mode as detect, manual, or auto.");
+      }
+
+      const result = await runDoctor(
+        {
+          service: clientFor(options.service),
+          receiver: clientFor(options.receiver),
+        },
+        {
+          serviceNode: options.service,
+          receiverNode: options.receiver,
+          targetPaymentShannons,
+          acceptMode: options.acceptMode,
+        },
+      );
 
       console.log(JSON.stringify(result, null, 2));
     });

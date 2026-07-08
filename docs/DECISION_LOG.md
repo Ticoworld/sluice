@@ -326,3 +326,14 @@ Decision:
 - The repo now explains how an operator, merchant backend, or wallet backend should use Sluice in practice.
 - The hosted demo remains replay-based rather than a live Fiber executor.
 - No live execute was run.
+
+## 2026-07-08 infrastructure hardening
+
+Decision:
+
+- The repo now includes a read-only `doctor` CLI command for operator diagnostics.
+- The HTTP API is now described in an OpenAPI contract.
+- The repository now ships a Dockerfile, `.dockerignore`, `.env.example`, and CI workflow for build/test trust.
+- The package-smoke script documents and verifies external package consumption from `npm pack`.
+- The new surface stays infrastructure-grade and does not add fake product UI or live Fiber hosting.
+- No live execute was run.

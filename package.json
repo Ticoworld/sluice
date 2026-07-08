@@ -26,6 +26,7 @@
     "build": "tsup",
     "prepack": "npm run build",
     "test": "vitest run",
+    "test:package": "node scripts/package-smoke.mjs",
     "dev": "tsx src/index.ts",
     "spike": "tsx scripts/spike-channel-open.ts"
   },

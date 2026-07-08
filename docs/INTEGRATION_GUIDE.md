@@ -17,6 +17,7 @@ Use the CLI when you are:
 Useful commands:
 
 - `quote`
+- `doctor`
 - `readiness`
 - `prepare-inbound`
 - `prove-payment`
@@ -108,3 +109,4 @@ An operator or LSP-style service can run Sluice around a service Fiber node:
 - [HTTP curl examples](../examples/http/curl.md)
 - [Merchant checkout flow example](../examples/merchant-checkout/checkout-flow.ts)
 - [Deployment guide](DEPLOYMENT.md)
+- [OpenAPI spec](openapi.yaml)

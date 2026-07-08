@@ -119,3 +119,20 @@ Live mutation requires:
 
 That applies to the CLI, SDK, and HTTP API.
 
+## Docker
+
+The repository includes a container recipe for the Sluice HTTP service.
+
+Build it with:
+
+```bash
+docker build -t sluice .
+```
+
+Run it on port 8787 with:
+
+```bash
+docker run --rm -p 8787:8787 sluice
+```
+
+The container only runs the Sluice service process. It does not bundle a Fiber node or hide any operator credentials inside the image.
