@@ -197,7 +197,7 @@ describe("prepareInboundChannel", () => {
     });
   });
 
-  it("fails safely when the expected pending temp id is missing on the receiver", async () => {
+  it("ignores unrelated pending channels and still returns ready when ChannelReady appears", async () => {
     const clients = createClients({
       serviceNodeInfo: makeNodeInfo("02service"),
       servicePeers: makePeer("02receiver"),
@@ -225,8 +225,8 @@ describe("prepareInboundChannel", () => {
       createRuntime(),
     );
 
-    expect(result.execution?.status).toBe("rpc_error");
-    expect(result.execution?.reason).toMatch(/refusing to accept an unrelated pending channel/i);
+    expect(result.execution?.status).toBe("ready");
+    expect(result.execution?.reason).toMatch(/ChannelReady/i);
     expect(clients.receiver.acceptChannel).not.toHaveBeenCalled();
     expect(clients.service.openChannel).toHaveBeenCalledTimes(1);
   });
@@ -303,17 +303,76 @@ describe("prepareInboundChannel", () => {
     expect(clients.receiver.acceptChannel).not.toHaveBeenCalled();
   });
 
+  it("prefers live ready channels over stale aborted history", async () => {
+    const staleServiceChannel = makeChannel({
+      pubkey: "02receiver",
+      state: { state_name: "Closed", state_flags: "FUNDING_ABORTED" },
+      failure_detail: "Funding transaction aborted",
+    });
+
+    const staleReceiverChannel = makeChannel({
+      pubkey: "02service",
+      state: { state_name: "Closed", state_flags: "FUNDING_ABORTED" },
+      failure_detail: "Funding transaction aborted",
+    });
+
+    const readyServiceChannel = makeChannel({ pubkey: "02receiver", channel_id: "0xready-service" });
+    const readyReceiverChannel = makeChannel({
+      pubkey: "02service",
+      channel_id: "0xready-receiver",
+      is_acceptor: true,
+      local_balance: "0",
+      remote_balance: "12000000000",
+    });
+
+    const clients = createClients({
+      serviceNodeInfo: makeNodeInfo("02service"),
+      servicePeers: makePeer("02receiver"),
+      serviceChannels: [
+        { channels: [staleServiceChannel] },
+        { channels: [staleServiceChannel, readyServiceChannel] },
+      ],
+      receiverPending: [{ channels: [] }, { channels: [] }],
+      receiverChannels: [
+        { channels: [staleReceiverChannel] },
+        { channels: [staleReceiverChannel, readyReceiverChannel] },
+      ],
+      openResult: { temporary_channel_id: "0xopener-temp" },
+    });
+
+    const result = await prepareInboundChannel(
+      clients,
+      {
+        serviceNode: "node4",
+        receiverNode: "node3",
+        receiverPubkey: "02receiver",
+        targetPaymentShannons: 100_000_000n,
+      },
+      { execute: true, timeoutMs: 5_000, pollIntervalMs: 1 },
+      createRuntime(),
+    );
+
+    expect(result.execution?.status).toBe("ready");
+    expect(clients.receiver.acceptChannel).not.toHaveBeenCalled();
+  });
+
   it("returns funding_aborted when the channel enters an aborted state", async () => {
-    const abortedChannel = makeChannel({
+    const abortedServiceChannel = makeChannel({
       pubkey: "02receiver",
       state: { state_name: "FundingAborted" },
       failure_detail: "funding aborted",
     });
 
+    const abortedReceiverChannel = makeChannel({
+      pubkey: "02service",
+      state: { state_name: "FundingAborted" },
+      failure_detail: "funding aborted",
+    });
+
     const clients = createClients({
-      serviceChannels: [{ channels: [] }, { channels: [abortedChannel] }],
+      serviceChannels: [{ channels: [] }, { channels: [abortedServiceChannel] }],
       receiverPending: [{ channels: [] }],
-      receiverChannels: [{ channels: [] }, { channels: [abortedChannel] }],
+      receiverChannels: [{ channels: [] }, { channels: [abortedReceiverChannel] }],
     });
 
     const result = await prepareInboundChannel(

@@ -348,3 +348,12 @@ Decision:
 - `demo:proof` must be explicitly enabled with `SLUICE_DEMO_EXECUTE=true` and `SLUICE_DEMO_YES=true`, or equivalent command-line flags, before it will run live mutation.
 - The harness improves presentation without changing Fiber behavior or adding fake UI.
 - No live execute was run.
+
+## 2026-07-10 final live proof rerun
+
+Decision:
+
+- The final live video should use fresh nodes `node13` and `node14` instead of the earlier polluted `node4/node12` pair.
+- The live demo runner stays env-backed, so any fresh service/receiver pair can be substituted without changing core code.
+- Stale aborted channel history should not be reused for the final recording.
+- The successful live proof is the authoritative judge-facing evidence for the before/after flow.

@@ -763,3 +763,21 @@ Implementation evidence:
 Verdict:
 
 - The judge-facing demo path is now easier to understand and repeat without hiding the real proof behind a long operator command.
+
+## 2026-07-10 final live proof rerun on fresh nodes
+
+Implementation evidence:
+
+- Fresh `node13` and `node14` were created for the final recording after the earlier `node4/node12` pair accumulated stale aborted channels.
+- `npm run demo` with `SLUICE_DEMO_EXECUTE=true` and `SLUICE_DEMO_YES=true` succeeded on the fresh pair.
+- Before payment attempt failed with no route.
+- Sluice opened a reserve-aware channel.
+- The receiver accepted the channel.
+- `ChannelReady` was reached.
+- The payment retry succeeded.
+- The receiver invoice became `Paid`.
+- No fake live Fiber execution was used.
+
+Verdict:
+
+- The final judge-facing live proof is complete on a fresh node pair.

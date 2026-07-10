@@ -136,8 +136,8 @@ function isFundingAborted(channel: Channel): boolean {
   );
 }
 
-function findChannelByCounterparty(channels: Channel[], counterpartyPubkey: string): Channel | undefined {
-  return channels.find((channel) => channelCounterparty(channel) === counterpartyPubkey);
+function matchingChannels(channels: Channel[], counterpartyPubkey: string): Channel[] {
+  return channels.filter((channel) => channelCounterparty(channel) === counterpartyPubkey);
 }
 
 function findPendingTempId(channels: Channel[], expectedTempId?: string): string | undefined {
@@ -228,34 +228,35 @@ function inspectExecutionState(
   state: ExecutionState,
   readyReason: string,
 ): CoordinatorExecutionResult | null {
-  const serviceChannel = findChannelByCounterparty(serviceChannels.channels, receiverPubkey);
-  const receiverChannel = findChannelByCounterparty(receiverChannels.channels, servicePubkey);
+  const serviceMatchingChannels = matchingChannels(serviceChannels.channels, receiverPubkey);
+  const receiverMatchingChannels = matchingChannels(receiverChannels.channels, servicePubkey);
 
-  if (serviceChannel && isFundingAborted(serviceChannel)) {
-    return buildExecutionResult(
-      "funding_aborted",
-      "Service-side channel entered a funding-aborted or closed state.",
-      state,
-    );
-  }
-
-  if (receiverChannel && isFundingAborted(receiverChannel)) {
-    return buildExecutionResult(
-      "funding_aborted",
-      "Receiver-side channel entered a funding-aborted or closed state.",
-      state,
-    );
-  }
-
-  if (serviceChannel && receiverChannel && isChannelReady(serviceChannel) && isChannelReady(receiverChannel)) {
+  if (serviceMatchingChannels.some(isChannelReady) && receiverMatchingChannels.some(isChannelReady)) {
     if (acceptMode === "manual" && !state.manualAcceptAttempted) {
       return null;
     }
 
-    return buildExecutionResult("ready", readyReason, {
-      ...state,
-      channelId: state.channelId ?? serviceChannel.channel_id,
-    });
+    return buildExecutionResult(
+      "ready",
+      readyReason,
+      {
+        ...state,
+        channelId: state.channelId ?? serviceMatchingChannels.find(isChannelReady)?.channel_id,
+      },
+    );
+  }
+
+  const serviceLiveChannels = serviceMatchingChannels.filter((channel) => !isFundingAborted(channel));
+  const receiverLiveChannels = receiverMatchingChannels.filter((channel) => !isFundingAborted(channel));
+
+  if (serviceMatchingChannels.length > 0 && receiverMatchingChannels.length > 0) {
+    if (serviceLiveChannels.length === 0 && receiverLiveChannels.length === 0) {
+      return buildExecutionResult(
+        "funding_aborted",
+        "Both service-side and receiver-side channels entered a funding-aborted or closed state.",
+        state,
+      );
+    }
   }
 
   return null;
@@ -372,15 +373,9 @@ export async function prepareInboundChannel(
 
         const pendingTempId = findPendingTempId(pendingList.channels, state.temporaryChannelId);
         if (pendingList.channels.length > 0 && !pendingTempId) {
-          return {
-            mode: "execute",
-            plan,
-            execution: buildExecutionResult(
-              "rpc_error",
-              "Expected pending channel was not found on receiver; refusing to accept an unrelated pending channel.",
-              state,
-            ),
-          };
+          // Another pending channel can appear briefly while Fiber is settling the
+          // live channel state. Keep polling until the expected temp id shows up
+          // or the service/receiver channel state becomes ready or aborted.
         }
 
         if (pendingTempId && !state.manualAcceptAttempted) {
