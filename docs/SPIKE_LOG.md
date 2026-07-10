@@ -750,3 +750,16 @@ Implementation evidence:
 Verdict:
 
 - The repo now has a stronger infrastructure trust layer for judges and future Fiber builders.
+
+## 2026-07-09 demo harness
+
+Implementation evidence:
+
+- Added `npm run demo` as the judge-facing public entrypoint, with `demo:doctor`, `demo:dry`, and `demo:proof` retained as advanced commands.
+- Added `.env.demo.example` so the demo can be configured cleanly without inlining local node values in docs or shell history.
+- Updated `docs/DEMO.md` to explain the public demo flow, the advanced commands, and the proof safety gate.
+- No live execute was run.
+
+Verdict:
+
+- The judge-facing demo path is now easier to understand and repeat without hiding the real proof behind a long operator command.

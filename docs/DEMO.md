@@ -2,9 +2,49 @@
 
 Sluice turns a Fiber receive failure into a reserve-aware channel-ready path and a successful payment, using the same CLI, SDK, and HTTP surfaces that builders can integrate.
 
+The demo is terminal-first on purpose. This is infrastructure, so the most honest demo is a repeatable command sequence, not a fake browser UI.
+
+## Public Demo
+
+Copy the demo env file, fill in your local node values, then run the public demo entrypoint:
+
+```powershell
+cp .env.demo.example .env.demo
+npm run demo
+```
+
+`npm run demo` loads `.env.demo`, checks the configured service and receiver, computes the quote, checks readiness, and then:
+
+- runs a safe dry-run story when live execution is not enabled
+- runs the real local proof only when `SLUICE_DEMO_EXECUTE=true` and `SLUICE_DEMO_YES=true`, or when `--execute --yes` is passed
+
+If the local Fiber RPC endpoints are unavailable, the command prints a human-readable setup message instead of a raw transport error.
+
+## Advanced Commands
+
+These stay available for debugging and maintainer use:
+
+```powershell
+npm run demo:doctor
+```
+
+Read-only setup check for the configured service and receiver.
+
+```powershell
+npm run demo:dry
+```
+
+Dry-run proof story only. No Fiber mutation.
+
+```powershell
+npm run demo:proof
+```
+
+Real proof runner, gated behind `SLUICE_DEMO_EXECUTE=true` and `SLUICE_DEMO_YES=true`, or `--execute --yes`.
+
 ## Local Runnable Demo
 
-These commands use the real local Sluice stack.
+The lower-level commands remain available if you want to call the core flow directly.
 
 ```powershell
 npx tsx src/index.ts quote --amount-ckb 1

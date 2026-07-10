@@ -27,6 +27,10 @@
     "prepack": "npm run build",
     "test": "vitest run",
     "test:package": "node scripts/package-smoke.mjs",
+    "demo": "tsx scripts/demo.ts",
+    "demo:doctor": "tsx scripts/demo-doctor.ts",
+    "demo:dry": "tsx scripts/demo-dry.ts",
+    "demo:proof": "tsx scripts/demo-proof.ts",
     "dev": "tsx src/index.ts",
     "spike": "tsx scripts/spike-channel-open.ts"
   },

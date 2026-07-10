@@ -337,3 +337,14 @@ Decision:
 - The package-smoke script documents and verifies external package consumption from `npm pack`.
 - The new surface stays infrastructure-grade and does not add fake product UI or live Fiber hosting.
 - No live execute was run.
+
+## 2026-07-09 demo harness
+
+Decision:
+
+- `npm run demo` is now the judge-facing public demo entrypoint.
+- `demo:doctor`, `demo:dry`, and `demo:proof` remain available as advanced/maintainer commands.
+- `.env.demo.example` is the documented place for judge-facing demo configuration.
+- `demo:proof` must be explicitly enabled with `SLUICE_DEMO_EXECUTE=true` and `SLUICE_DEMO_YES=true`, or equivalent command-line flags, before it will run live mutation.
+- The harness improves presentation without changing Fiber behavior or adding fake UI.
+- No live execute was run.

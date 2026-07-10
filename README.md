@@ -12,6 +12,15 @@ Category: Merchant, Liquidity, LSP, and Multi-Asset Infrastructure.
 
 Status: submission package.
 
+## Quick Demo
+
+```powershell
+cp .env.demo.example .env.demo
+npm run demo
+```
+
+For the maintainer-only commands and the local proof runbook, see [docs/DEMO.md](docs/DEMO.md).
+
 ## Repo Map
 
 - [docs/SOURCES.md](docs/SOURCES.md): official source list and project direction references.
@@ -28,6 +37,7 @@ Status: submission package.
 
 - [docs/INTEGRATION_GUIDE.md](docs/INTEGRATION_GUIDE.md): when to use CLI, SDK, or HTTP and how the safety model works.
 - [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md): recommended operator, merchant, and wallet deployment patterns.
+- [docs/DEMO.md](docs/DEMO.md): public `npm run demo` flow, dry-run proof, and local proof runbook.
 - [docs/FIBER_RESERVE_FINDING.md](docs/FIBER_RESERVE_FINDING.md): the reserve-aware Fiber finding that shaped the Sluice quote and prepare flow.
 - [docs/SDK.md](docs/SDK.md): SDK usage from source or as an installed package for ESM, TypeScript, and CommonJS consumers.
 - [examples/sdk/quote.ts](examples/sdk/quote.ts): SDK quote example for the 1 CKB proof case.
