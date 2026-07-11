@@ -357,3 +357,23 @@ Decision:
 - The live demo runner stays env-backed, so any fresh service/receiver pair can be substituted without changing core code.
 - Stale aborted channel history should not be reused for the final recording.
 - The successful live proof is the authoritative judge-facing evidence for the before/after flow.
+
+## 2026-07-11 REAL_VS_SIMULATED.md reconciliation
+
+Decision:
+
+- `docs/REAL_VS_SIMULATED.md` had gone stale: it still said "No Fiber RPC execution has happened yet," contradicting the 2026-07-10 successful live proof recorded above and in `SPIKE_LOG.md`.
+- The doc now states the real before/after result (route failure, channel opened, `ChannelReady`, payment `Success`, invoice `Paid`) with a pointer to the `DECISION_LOG.md`/`SPIKE_LOG.md` evidence and `demo/proof-data.json`.
+- Added an explicit "Replayed / Hosted Demo" section clarifying that `demo/index.html` is a recorded replay, not live Fiber execution.
+- No code was changed. No live execute was run.
+
+## 2026-07-11 npm package rename to @ticoworld/sluice
+
+Decision:
+
+- The unscoped npm name `sluice` is already registered by an unrelated third-party package, so publishing under it was never viable.
+- Renamed the package to `@ticoworld/sluice` (personal npm account scope, confirmed owned by the maintainer) and set the version to `0.1.0-alpha.0` to signal pre-stable status.
+- Added `publishConfig.access: public` so the scoped package publishes publicly rather than defaulting to private.
+- Updated all in-repo references from `sluice` to `@ticoworld/sluice`: `scripts/package-smoke.mjs`, `docs/SDK.md`, `docs/DEPLOYMENT.md`.
+- Verified end to end: `npm run build`, `npx tsc --noEmit`, `npx vitest run` (67 passed), `npm pack --dry-run` (clean 10-file tarball, no stray files), and `npm run test:package` (ESM/TypeScript/CommonJS consumers all import `@ticoworld/sluice` successfully from a real packed tarball).
+- Not yet published. No live execute was run.

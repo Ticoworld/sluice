@@ -79,8 +79,8 @@ async function main() {
     await writeFile(
       join(esmDir, "index.js"),
       `
-import { Sluice } from "sluice";
-import { Sluice as SluiceSubpath } from "sluice/sdk";
+import { Sluice } from "@ticoworld/sluice";
+import { Sluice as SluiceSubpath } from "@ticoworld/sluice/sdk";
 
 const sluice = new Sluice({ serviceRpcUrl: "http://127.0.0.1:8257" });
 const quote = sluice.quote({ amountCkb: "1" });
@@ -109,7 +109,7 @@ console.log("esm-ok");
     await writeFile(
       join(tsDir, "index.ts"),
       `
-import { Sluice } from "sluice";
+import { Sluice } from "@ticoworld/sluice";
 
 const sluice = new Sluice({ serviceRpcUrl: "http://127.0.0.1:8257" });
 const quote = sluice.quote({ amountCkb: "1" });
@@ -132,8 +132,8 @@ console.log("ts-ok");
     await writeFile(
       join(cjsDir, "index.js"),
       `
-const { Sluice } = require("sluice");
-const { Sluice: SluiceSubpath } = require("sluice/sdk");
+const { Sluice } = require("@ticoworld/sluice");
+const { Sluice: SluiceSubpath } = require("@ticoworld/sluice/sdk");
 
 const sluice = new Sluice({ serviceRpcUrl: "http://127.0.0.1:8257" });
 const quote = sluice.quote({ amountCkb: "1" });

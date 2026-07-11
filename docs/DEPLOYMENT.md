@@ -59,13 +59,13 @@ Good for:
 Package consumers can import Sluice as:
 
 ```ts
-import { Sluice } from "sluice";
+import { Sluice } from "@ticoworld/sluice";
 ```
 
 or:
 
 ```js
-const { Sluice } = require("sluice");
+const { Sluice } = require("@ticoworld/sluice");
 ```
 
 ## URLs and Trust Boundaries

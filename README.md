@@ -12,6 +12,8 @@ Category: Merchant, Liquidity, LSP, and Multi-Asset Infrastructure.
 
 Status: submission package.
 
+> **Alpha release.** Sluice is hackathon-stage Fiber infrastructure tooling. The SDK, CLI, and HTTP API are usable for local integration and testing, but this is not production LSP infrastructure yet. See [docs/REAL_VS_SIMULATED.md](docs/REAL_VS_SIMULATED.md) for exactly what is real, replayed, and out of scope.
+
 ## Quick Demo
 
 ```powershell

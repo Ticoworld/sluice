@@ -12,20 +12,24 @@ import { Sluice } from "./src/sdk/index.js";
 
 ## Package Usage
 
+```bash
+npm install @ticoworld/sluice
+```
+
 When Sluice is installed as a package or consumed from an `npm pack` tarball:
 
 ```ts
-import { Sluice } from "sluice";
+import { Sluice } from "@ticoworld/sluice";
 ```
 
-The package root re-exports the SDK entry, and the `sluice/sdk` subpath is also available for direct SDK imports.
+The package root re-exports the SDK entry, and the `@ticoworld/sluice/sdk` subpath is also available for direct SDK imports.
 CommonJS consumers can use:
 
 ```js
-const { Sluice } = require("sluice");
+const { Sluice } = require("@ticoworld/sluice");
 ```
 
-The same pattern works for `require("sluice/sdk")`.
+The same pattern works for `require("@ticoworld/sluice/sdk")`.
 
 Create one SDK instance for the service node you want to operate:
 

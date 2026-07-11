@@ -1,7 +1,18 @@
 {
-  "name": "sluice",
-  "version": "1.0.0",
+  "name": "@ticoworld/sluice",
+  "version": "0.1.0-alpha.0",
   "description": "Reserve-aware JIT inbound liquidity primitive for Fiber",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ticoworld/sluice.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Ticoworld/sluice/issues"
+  },
+  "homepage": "https://github.com/Ticoworld/sluice#readme",
+  "publishConfig": {
+    "access": "public"
+  },
   "type": "module",
   "main": "./dist/package.cjs",
   "module": "./dist/package.js",
@@ -20,7 +31,8 @@
   },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
     "build": "tsup",
@@ -35,8 +47,8 @@
     "spike": "tsx scripts/spike-channel-open.ts"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Timothy Orichi",
+  "license": "MIT",
   "dependencies": {
     "commander": "^15.0.0",
     "dotenv": "^17.4.2",
