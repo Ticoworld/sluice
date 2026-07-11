@@ -45,6 +45,7 @@ For the maintainer-only commands and the local proof runbook, see [docs/DEMO.md]
 - [examples/sdk/quote.ts](examples/sdk/quote.ts): SDK quote example for the 1 CKB proof case.
 - [examples/sdk/prepare-dry-run.ts](examples/sdk/prepare-dry-run.ts): SDK dry-run prepare example with detect mode.
 - [examples/merchant-checkout/checkout-flow.ts](examples/merchant-checkout/checkout-flow.ts): concrete merchant retry flow that calls Sluice before retrying payment.
+- [examples/wallet-backend/receiver-readiness.ts](examples/wallet-backend/receiver-readiness.ts): wallet backend readiness check before showing a receive invoice as payable.
 - [examples/http/curl.md](examples/http/curl.md): curl examples for the HTTP API.
 
 ## Infrastructure Readiness

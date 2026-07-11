@@ -377,3 +377,13 @@ Decision:
 - Updated all in-repo references from `sluice` to `@ticoworld/sluice`: `scripts/package-smoke.mjs`, `docs/SDK.md`, `docs/DEPLOYMENT.md`.
 - Verified end to end: `npm run build`, `npx tsc --noEmit`, `npx vitest run` (67 passed), `npm pack --dry-run` (clean 10-file tarball, no stray files), and `npm run test:package` (ESM/TypeScript/CommonJS consumers all import `@ticoworld/sluice` successfully from a real packed tarball).
 - Not yet published. No live execute was run.
+
+## 2026-07-11 npm alpha publish and wallet-backend example
+
+Decision:
+
+- Published `@ticoworld/sluice@0.1.0-alpha.0` to the public npm registry under the `alpha` dist-tag, after enabling 2FA on the npm account and generating a scoped, time-limited granular access token with 2FA bypass (revoked immediately after the publish completed).
+- Verified the published package with a real registry install in a clean directory (`npm install @ticoworld/sluice@alpha`), then imported and called `Sluice.quote()` against the installed package to confirm it actually works, not just that publish succeeded.
+- npm assigns `latest` to a package's first-ever published version regardless of the `--tag` used, and that tag cannot be removed while it is the package's only version. `latest` and `alpha` currently point at the same version as an unavoidable consequence of this being the first publish. Docs were updated to explicitly pin `npm install @ticoworld/sluice@alpha` rather than relying on the bare install resolving correctly.
+- Added `examples/wallet-backend/receiver-readiness.ts`, closing the one hackathon-rubric-named consumer audience (wallets, alongside merchants/services/operators already covered) with no prior example. Uses the SDK's real `readiness_status` field (`"ready" | "not_ready" | "unknown"`), not a `.ready` boolean, matching `src/core/readiness.ts`.
+- No live execute was run.
