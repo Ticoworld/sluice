@@ -13,8 +13,10 @@ import { Sluice } from "./src/sdk/index.js";
 ## Package Usage
 
 ```bash
-npm install @ticoworld/sluice
+npm install @ticoworld/sluice@alpha
 ```
+
+Sluice is pre-1.0 and published under the `alpha` dist-tag. Always pin `@alpha` explicitly — as the only published version, it currently also happens to be the registry's default `latest`, but that will change once a stable version ships.
 
 When Sluice is installed as a package or consumed from an `npm pack` tarball:
 
