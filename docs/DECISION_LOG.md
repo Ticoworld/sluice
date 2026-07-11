@@ -409,3 +409,13 @@ Decision:
 - Added auto-play: the recorded Sluice success path now plays automatically the first time the Proof Replay section scrolls into view (IntersectionObserver, one-shot), instead of sitting idle until clicked. Manual replay buttons still work afterward.
 - Verified with the same headless-Chromium screenshot method as the prior pass: first-screen view, proof-replay auto-play firing on scroll, builder surfaces, and real-vs-replay all confirmed rendering correctly with zero console errors.
 - No live execute was run.
+
+## 2026-07-12 demo/index.html hero height and further trim
+
+Decision:
+
+- Hero now fills the viewport (`min-height: calc(100vh - nav)`, vertically centered), so the page opens on a single commanding screen instead of a shorter block.
+- Cut remaining documentation-flavored content that belonged in docs, not on a landing page: playground per-tab notes shortened from full sentences to a bare `src: <path>` tag, builder-surface card descriptions cut to one line each, and the "Real vs Replay" section's duplicated `docs/REAL_VS_SIMULATED.md` link reduced from two mentions to one.
+- Footer link grid cut from 9 links (reading as a doc sitemap) down to 5 essentials: GitHub repo, npm package, README, docs/SDK.md, docs/HTTP_API.md. The dropped links (openapi.yaml, DEMO.md, SUBMISSION.md, REAL_VS_SIMULATED.md) all remain reachable from within the page itself (builder-surface cards, honesty banner, real-vs-replay section) or from the GitHub repo root.
+- Verified with the same headless-Chromium screenshot method: full-viewport hero confirmed, trimmed sections confirmed rendering correctly, zero console errors.
+- No live execute was run.

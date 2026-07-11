@@ -74,7 +74,13 @@
     .btn-ghost:hover { border-color: var(--accent); text-decoration: none; }
 
     /* Hero */
-    section.hero { padding: 56px 0 36px; border-bottom: 1px solid var(--panel-border); }
+    section.hero {
+      min-height: calc(100vh - 56px);
+      display: flex;
+      align-items: center;
+      padding: 56px 0 36px;
+      border-bottom: 1px solid var(--panel-border);
+    }
     h1.hero-title {
       font-size: clamp(1.9rem, 3.6vw, 2.9rem); line-height: 1.15; font-weight: 800; margin: 0 0 18px;
       max-width: 820px;
@@ -138,7 +144,7 @@
     .pg-output-line:last-child { border-bottom: none; }
     .pg-output-line .k { color: var(--muted); }
     .pg-output-line .v { color: var(--accent); }
-    .pg-note { margin-top: 16px; font-size: 0.78rem; color: var(--muted); line-height: 1.5; padding-top: 14px; border-top: 1px dashed var(--line); }
+    .pg-note { margin-top: 16px; font-family: monospace; font-size: 0.72rem; color: var(--muted); padding-top: 12px; border-top: 1px dashed var(--line); }
 
     /* Proof replay (existing engine, relabeled) */
     .replay-shell { border: 1px solid var(--panel-border); border-radius: 12px; background: var(--panel); box-shadow: var(--shadow); overflow: hidden; }
@@ -424,49 +430,49 @@
         <div class="surface-card">
           <div class="tag">Package</div>
           <h3>TypeScript SDK</h3>
-          <p>Typed <code class="mono">Sluice</code> client for quote, readiness, prepare, and payment proof. Published on npm.</p>
+          <p>Quote, readiness, prepare, and payment proof. Published on npm.</p>
           <a class="card-link" href="../docs/SDK.md">docs/SDK.md &rarr;</a>
         </div>
         <div class="surface-card">
           <div class="tag">Operator</div>
           <h3>CLI</h3>
-          <p>Local operator and proof-runner commands: quote, readiness, prepare-inbound, prove-payment, doctor.</p>
+          <p>Quote, readiness, prepare-inbound, prove-payment, doctor.</p>
           <a class="card-link" href="../docs/DEMO.md">docs/DEMO.md &rarr;</a>
         </div>
         <div class="surface-card">
           <div class="tag">Integration</div>
           <h3>HTTP API</h3>
-          <p>Wraps the SDK for external systems: wallets, merchant backends, and services that aren't Node.js.</p>
+          <p>For wallets, merchant backends, and non-Node.js services.</p>
           <a class="card-link" href="../docs/HTTP_API.md">docs/HTTP_API.md &rarr;</a>
         </div>
         <div class="surface-card">
           <div class="tag">Contract</div>
           <h3>OpenAPI spec</h3>
-          <p>Machine-readable contract for the HTTP surface &mdash; generate clients or wire up API tooling directly.</p>
+          <p>Generate clients or wire up API tooling directly.</p>
           <a class="card-link" href="../docs/openapi.yaml">docs/openapi.yaml &rarr;</a>
         </div>
         <div class="surface-card">
           <div class="tag">Deploy</div>
           <h3>Docker deploy surface</h3>
-          <p>Container recipe for running the Sluice HTTP service, plus operator/merchant/wallet deployment patterns.</p>
+          <p>Operator, merchant, and wallet deployment patterns.</p>
           <a class="card-link" href="../docs/DEPLOYMENT.md">docs/DEPLOYMENT.md &rarr;</a>
         </div>
         <div class="surface-card">
           <div class="tag">Example</div>
           <h3>Wallet backend example</h3>
-          <p>Checks receiver readiness before showing a receive invoice as payable, falling back to a Sluice prepare plan.</p>
+          <p>Readiness check before showing a receive invoice as payable.</p>
           <a class="card-link" href="../examples/wallet-backend/receiver-readiness.ts">examples/wallet-backend &rarr;</a>
         </div>
         <div class="surface-card">
           <div class="tag">Example</div>
           <h3>Merchant checkout example</h3>
-          <p>Concrete retry flow: failed payment, Sluice prepare call, successful retry after ChannelReady.</p>
+          <p>Failed payment, prepare call, successful retry.</p>
           <a class="card-link" href="../examples/merchant-checkout/checkout-flow.ts">examples/merchant-checkout &rarr;</a>
         </div>
         <div class="surface-card">
           <div class="tag">Diagnostics</div>
           <h3>Operator doctor command</h3>
-          <p>Read-only setup check for the configured service and receiver nodes before running anything live.</p>
+          <p>Read-only setup check before running anything live.</p>
           <a class="card-link" href="../docs/DEMO.md">docs/DEMO.md &rarr;</a>
         </div>
       </div>
@@ -478,7 +484,6 @@
       <div class="section-head">
         <div class="eyebrow">Architecture &amp; Scope</div>
         <h2>Real vs. replay vs. out of scope</h2>
-        <p>Full detail lives in <a href="../docs/REAL_VS_SIMULATED.md">docs/REAL_VS_SIMULATED.md</a>. Summary:</p>
       </div>
       <div class="rvr-grid">
         <div class="rvr-col real">
@@ -506,7 +511,7 @@
           </ul>
         </div>
       </div>
-      <p class="rvr-source">Source of truth: <a href="../docs/REAL_VS_SIMULATED.md">docs/REAL_VS_SIMULATED.md</a></p>
+      <p class="rvr-source">Full detail: <a href="../docs/REAL_VS_SIMULATED.md">docs/REAL_VS_SIMULATED.md</a></p>
     </div>
   </section>
 
@@ -519,12 +524,8 @@
         <a href="https://github.com/Ticoworld/sluice" target="_blank" rel="noopener">GitHub repo</a>
         <a href="https://www.npmjs.com/package/@ticoworld/sluice" target="_blank" rel="noopener">npm package</a>
         <a href="../README.md">README</a>
-        <a href="../docs/REAL_VS_SIMULATED.md">docs/REAL_VS_SIMULATED.md</a>
         <a href="../docs/SDK.md">docs/SDK.md</a>
         <a href="../docs/HTTP_API.md">docs/HTTP_API.md</a>
-        <a href="../docs/openapi.yaml">docs/openapi.yaml</a>
-        <a href="../docs/DEMO.md">docs/DEMO.md</a>
-        <a href="../docs/SUBMISSION.md">docs/SUBMISSION.md</a>
       </div>
       <div class="fine-print">
         Sluice is an alpha, hackathon-stage submission. Category 3: Merchant, Liquidity, LSP, and Multi-Asset Infrastructure.
@@ -550,7 +551,7 @@ const quote = sluice.quote({ amountCkb: "1" });`,
           ["Opener Funding", "120 CKB"],
           ["Usable Liquidity", "~21 CKB"],
         ],
-        note: "Source: src/sdk/sluice.ts — Sluice.quote(). Same values as the recorded proof below.",
+        note: "src/sdk/sluice.ts",
       },
       cli: {
         code: `npx tsx src/index.ts quote --amount-ckb 1
@@ -566,7 +567,7 @@ npx tsx src/index.ts prepare-inbound \\
           ["Receiver Reserve", "99 CKB"],
           ["Opener Funding", "120 CKB"],
         ],
-        note: "Source: docs/DEMO.md — Local Runnable Demo section. Same commands used to produce the recorded proof.",
+        note: "docs/DEMO.md",
       },
       http: {
         code: `curl -X POST http://127.0.0.1:8787/v1/quote \\
@@ -578,7 +579,7 @@ npx tsx src/index.ts prepare-inbound \\
           ["receiver_reserve", "99 CKB"],
           ["opener_funding", "120 CKB"],
         ],
-        note: "Source: examples/http/curl.md. Default local server: npx tsx src/index.ts serve --port 8787.",
+        note: "examples/http/curl.md",
       },
       wallet: {
         code: `const readiness = await sluice.checkReadiness({
@@ -599,7 +600,7 @@ if (readiness.readiness_status !== "ready") {
           ["reason", "No ChannelReady path yet"],
           ["action", "prepareInbound (dry run)"],
         ],
-        note: "Source: examples/wallet-backend/receiver-readiness.ts. Checked before showing a receive invoice as payable.",
+        note: "examples/wallet-backend/receiver-readiness.ts",
       },
       merchant: {
         code: `const first = await attemptMerchantPayment();
@@ -619,7 +620,7 @@ const retry = await retryMerchantPayment();
           ["Sluice prepare", "Planned"],
           ["Retry after ChannelReady", "Success"],
         ],
-        note: "Source: examples/merchant-checkout/checkout-flow.ts. Same retry pattern as the recorded proof below.",
+        note: "examples/merchant-checkout/checkout-flow.ts",
       },
     };
 
@@ -630,7 +631,7 @@ const retry = await retryMerchantPayment();
       output.innerHTML = tab.output
         .map(([k, v]) => `<div class="pg-output-line"><span class="k">${k}</span><span class="v">${v}</span></div>`)
         .join("");
-      document.getElementById("pg-note").textContent = tab.note;
+      document.getElementById("pg-note").textContent = "src: " + tab.note;
     }
 
     document.querySelectorAll(".tab-btn").forEach((btn) => {
