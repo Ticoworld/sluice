@@ -398,3 +398,14 @@ Decision:
 - No JS interpreter, no live Fiber calls from the browser, no backend/auth/database added. The proof-replay engine (SVG animation, terminal telemetry) is the same code as before, sourced from `proof-data.json`, only relabeled for honesty.
 - Verified locally: served `demo/` on a local static server, syntax-checked the inline script, confirmed all linked repo files exist, and drove the page with a headless-Chromium script to screenshot the hero, both playground tab states, the proof-replay idle and success states, the builder-surface cards, and the real-vs-replay section. Zero console errors.
 - No live execute was run.
+
+## 2026-07-12 demo/index.html copy and density pass
+
+Decision:
+
+- Cut the hero kicker line (category text already lives in the footer fine-print) and trimmed the hero sub-headline to one sentence, so the SDK playground appears close to the fold instead of after a long scroll.
+- Rewrote section headers/descriptions that read as defensive or over-explaining: "How builders actually use Sluice" -> "Integration & SDK"; "This is infrastructure, not a hackathon trick" -> "Extensible API Surfaces" (not "Production-ready patterns" -- that would contradict "Production LSP" already listed under out-of-scope on the same page); "Honesty Model" eyebrow -> "Architecture & Scope".
+- Tightened the proof-replay honesty banner's wording but deliberately kept the explicit "does not execute Fiber RPC calls in your browser" statement and the link to `docs/REAL_VS_SIMULATED.md` -- that line is the page's most direct evidence for the hackathon rule requiring submissions to state what is real/mocked/simulated, and cutting it would reopen the same trust gap fixed on 2026-07-11.
+- Added auto-play: the recorded Sluice success path now plays automatically the first time the Proof Replay section scrolls into view (IntersectionObserver, one-shot), instead of sitting idle until clicked. Manual replay buttons still work afterward.
+- Verified with the same headless-Chromium screenshot method as the prior pass: first-screen view, proof-replay auto-play firing on scroll, builder surfaces, and real-vs-replay all confirmed rendering correctly with zero console errors.
+- No live execute was run.
