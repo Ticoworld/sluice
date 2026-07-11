@@ -3,12 +3,13 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Sluice Console | Fiber Network Hackathon</title>
+  <title>Sluice | Reserve-Aware Inbound Liquidity for Fiber</title>
   <style>
     :root {
       color-scheme: dark;
       --bg: #000000;
       --panel: #09090b;
+      --panel-2: #0f0f12;
       --panel-border: rgba(255, 255, 255, 0.08);
       --line: #27272a;
       --text: #f4f4f5;
@@ -20,377 +21,659 @@
       --shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
       font-family: "Inter", system-ui, sans-serif;
     }
-    
+
     * { box-sizing: border-box; }
-    
+
+    html { scroll-behavior: smooth; }
+
     body {
-      margin: 0; 
-      height: 100vh; 
-      color: var(--text); 
-      background: var(--bg);
-      background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
-      background-size: 24px 24px;
-      display: flex;
-      overflow: hidden;
-    }
-
-    /* Sidebar */
-    aside {
-      width: 320px;
-      background: var(--panel);
-      border-right: 1px solid var(--panel-border);
-      display: flex;
-      flex-direction: column;
-      padding: 24px;
-      z-index: 10;
-    }
-
-    .brand {
-      font-weight: 800; 
-      font-size: 1.4rem; 
-      display: flex; 
-      align-items: center; 
-      gap: 12px;
-      margin-bottom: 32px;
-    }
-
-    .sidebar-section {
-      margin-bottom: 32px;
-    }
-
-    .sidebar-title {
-      font-size: 0.75rem;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-bottom: 12px;
-      font-family: monospace;
-      border-bottom: 1px solid var(--line);
-      padding-bottom: 6px;
-    }
-
-    .nav-link {
-      display: block;
+      margin: 0;
       color: var(--text);
-      text-decoration: none;
-      padding: 8px 12px;
-      border-radius: 6px;
-      font-size: 0.9rem;
-      margin-bottom: 4px;
-      transition: background 0.2s;
-    }
-    .nav-link:hover { background: rgba(255,255,255,0.05); }
-    
-    .context-card {
-      background: rgba(255,255,255,0.02);
-      border: 1px solid var(--panel-border);
-      border-radius: 6px;
-      padding: 16px;
-      font-size: 0.85rem;
-      color: var(--muted);
-      line-height: 1.5;
-      margin-bottom: 12px;
+      background: var(--bg);
+      background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+      background-size: 24px 24px;
     }
 
-    .context-card strong { color: var(--text); }
-    .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-family: monospace; background: rgba(255,255,255,0.05); border: 1px solid var(--panel-border); color: var(--text); }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
 
-    /* Main Area */
-    main {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-    }
+    code, pre, .mono { font-family: "Cascadia Code", "Fira Code", Menlo, monospace; }
 
-    .topbar {
-      height: 64px;
+    .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+
+    /* Top nav */
+    header.topnav {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(8px);
       border-bottom: 1px solid var(--panel-border);
+    }
+    .topnav-inner {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 14px 32px;
       display: flex;
       align-items: center;
-      padding: 0 32px;
-      background: var(--bg);
-      font-family: monospace;
-      font-size: 0.9rem;
-      color: var(--muted);
+      justify-content: space-between;
     }
-    .topbar strong { color: var(--text); }
-
-    .console-grid {
-      flex: 1;
-      display: grid;
-      grid-template-columns: 350px 1fr;
-      padding: 32px;
-      gap: 32px;
-      overflow-y: auto;
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 1.1rem; }
+    .brand img { height: 26px; width: 26px; object-fit: contain; border-radius: 6px; mix-blend-mode: screen; }
+    .badge-alpha {
+      font-family: monospace; font-size: 0.7rem; padding: 2px 7px; border-radius: 4px;
+      background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.35); color: var(--warn);
     }
-
-    /* Sandbox Controls */
-    .control-panel {
-      display: flex;
-      flex-direction: column;
-      gap: 24px;
+    nav.topnav-links { display: flex; gap: 20px; font-size: 0.88rem; color: var(--muted); align-items: center; }
+    nav.topnav-links a { color: var(--muted); }
+    nav.topnav-links a:hover { color: var(--text); }
+    .btn-ghost {
+      border: 1px solid var(--panel-border); border-radius: 6px; padding: 6px 12px;
+      color: var(--text) !important; font-size: 0.85rem;
     }
+    .btn-ghost:hover { border-color: var(--accent); text-decoration: none; }
 
+    /* Hero */
+    section.hero { padding: 72px 0 56px; border-bottom: 1px solid var(--panel-border); }
+    .kicker {
+      font-family: monospace; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em;
+      color: var(--accent); margin-bottom: 18px; display: flex; align-items: center; gap: 8px;
+    }
+    .kicker::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+    h1.hero-title {
+      font-size: clamp(1.9rem, 3.6vw, 2.9rem); line-height: 1.15; font-weight: 800; margin: 0 0 18px;
+      max-width: 820px;
+    }
+    h1.hero-title .hl { color: var(--accent); }
+    p.hero-sub { font-size: 1.15rem; color: var(--muted); max-width: 640px; margin: 0 0 32px; }
+
+    .install-block {
+      display: flex; align-items: center; gap: 12px; max-width: 560px;
+      background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+      padding: 14px 18px; margin-bottom: 24px;
+    }
+    .install-block .prompt { color: var(--muted); }
+    .install-block code { color: var(--text); font-size: 0.95rem; flex: 1; }
+    .copy-btn {
+      background: transparent; border: 1px solid var(--panel-border); color: var(--muted);
+      border-radius: 6px; padding: 6px 10px; font-size: 0.75rem; cursor: pointer; font-family: inherit;
+      transition: all 0.15s;
+    }
+    .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .copy-btn.copied { border-color: var(--success); color: var(--success); }
+
+    .hero-ctas { display: flex; flex-wrap: wrap; gap: 12px; }
     .btn {
-      width: 100%;
-      background: var(--panel);
-      border: 1px solid var(--panel-border);
-      color: var(--text);
-      padding: 16px;
-      border-radius: 8px;
-      font-size: 1rem;
-      font-weight: 600;
-      text-align: left;
-      cursor: pointer;
-      transition: all 0.2s;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
+      display: inline-flex; align-items: center; gap: 8px; padding: 11px 18px; border-radius: 8px;
+      font-size: 0.9rem; font-weight: 600; cursor: pointer; border: 1px solid transparent;
     }
-    .btn:hover { border-color: var(--line); background: rgba(255,255,255,0.05); }
-    .btn span { font-size: 0.8rem; font-weight: 400; color: var(--muted); font-family: monospace; }
-    
-    .btn.active {
-      border-color: var(--accent);
-      background: rgba(34, 211, 238, 0.05);
-      box-shadow: 0 0 12px rgba(34, 211, 238, 0.1);
-    }
-    .btn.fail-active {
-      border-color: var(--danger);
-      background: rgba(248, 113, 113, 0.05);
-    }
+    .btn-primary { background: var(--accent); color: #001014; }
+    .btn-primary:hover { background: #67e8f9; text-decoration: none; }
+    .btn-secondary { border-color: var(--panel-border); color: var(--text) !important; }
+    .btn-secondary:hover { border-color: var(--accent); text-decoration: none; }
 
-    .data-card {
-      background: #000;
-      border: 1px solid var(--panel-border);
-      border-radius: 8px;
-      overflow: hidden;
+    section { padding: 64px 0; }
+    section.alt { background: var(--panel-2); border-top: 1px solid var(--panel-border); border-bottom: 1px solid var(--panel-border); }
+
+    .section-head { margin-bottom: 32px; max-width: 700px; }
+    .section-head .eyebrow { font-family: monospace; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 8px; }
+    .section-head h2 { font-size: 1.6rem; margin: 0 0 10px; }
+    .section-head p { color: var(--muted); margin: 0; line-height: 1.55; }
+
+    /* Playground */
+    .playground { border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden; background: var(--panel); box-shadow: var(--shadow); }
+    .tabs { display: flex; flex-wrap: wrap; border-bottom: 1px solid var(--line); background: #050506; }
+    .tab-btn {
+      background: transparent; border: none; color: var(--muted); font-family: monospace; font-size: 0.82rem;
+      padding: 12px 18px; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s;
     }
-    .data-header {
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--line);
-      font-family: monospace;
-      font-size: 0.8rem;
-      color: var(--muted);
-      background: var(--panel);
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); background: rgba(34, 211, 238, 0.04); }
+
+    .playground-grid { display: grid; grid-template-columns: 1.15fr 1fr; min-height: 320px; }
+    @media (max-width: 860px) { .playground-grid { grid-template-columns: 1fr; } }
+
+    .pg-pane { padding: 22px 24px; }
+    .pg-pane.code { border-right: 1px solid var(--line); }
+    @media (max-width: 860px) { .pg-pane.code { border-right: none; border-bottom: 1px solid var(--line); } }
+    .pg-pane-label { font-family: monospace; font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; }
+    .pg-pane pre { margin: 0; font-size: 0.83rem; line-height: 1.6; color: #a5b4fc; white-space: pre-wrap; word-break: break-word; }
+    .pg-output-line { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--line); font-family: monospace; font-size: 0.85rem; }
+    .pg-output-line:last-child { border-bottom: none; }
+    .pg-output-line .k { color: var(--muted); }
+    .pg-output-line .v { color: var(--accent); }
+    .pg-note { margin-top: 16px; font-size: 0.78rem; color: var(--muted); line-height: 1.5; padding-top: 14px; border-top: 1px dashed var(--line); }
+
+    /* Proof replay (existing engine, relabeled) */
+    .replay-shell { border: 1px solid var(--panel-border); border-radius: 12px; background: var(--panel); box-shadow: var(--shadow); overflow: hidden; }
+    .replay-header { padding: 16px 24px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+    .replay-header .title { font-weight: 700; font-size: 0.95rem; }
+    .replay-status-pill { font-family: monospace; font-size: 0.72rem; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--panel-border); color: var(--muted); }
+    .honesty-banner {
+      margin: 0; padding: 12px 24px; background: rgba(251, 191, 36, 0.06); border-bottom: 1px solid rgba(251, 191, 36, 0.2);
+      font-size: 0.82rem; color: #fcd34d; line-height: 1.5;
     }
-    .data-table { width: 100%; border-collapse: collapse; font-family: monospace; font-size: 0.85rem; }
-    .data-table th, .data-table td { padding: 10px 16px; text-align: left; border-bottom: 1px solid var(--line); }
+    .honesty-banner code { color: #fde68a; }
+
+    .console-grid { display: grid; grid-template-columns: 340px 1fr; gap: 28px; padding: 28px 24px; }
+    @media (max-width: 900px) { .console-grid { grid-template-columns: 1fr; } }
+
+    .control-panel { display: flex; flex-direction: column; gap: 20px; }
+    .replay-btn {
+      width: 100%; background: var(--panel-2); border: 1px solid var(--panel-border); color: var(--text);
+      padding: 15px; border-radius: 8px; font-size: 0.95rem; font-weight: 600; text-align: left; cursor: pointer;
+      display: flex; flex-direction: column; gap: 4px; transition: all 0.2s;
+    }
+    .replay-btn span { font-size: 0.78rem; font-weight: 400; color: var(--muted); font-family: monospace; }
+    .replay-btn:hover { border-color: var(--line); background: rgba(255,255,255,0.04); }
+    .replay-btn.active { border-color: var(--accent); background: rgba(34, 211, 238, 0.05); box-shadow: 0 0 12px rgba(34, 211, 238, 0.1); }
+    .replay-btn.fail-active { border-color: var(--danger); background: rgba(248, 113, 113, 0.05); }
+
+    .data-card { background: #000; border: 1px solid var(--panel-border); border-radius: 8px; overflow: hidden; }
+    .data-header { padding: 10px 14px; border-bottom: 1px solid var(--line); font-family: monospace; font-size: 0.76rem; color: var(--muted); background: var(--panel-2); }
+    .data-table { width: 100%; border-collapse: collapse; font-family: monospace; font-size: 0.82rem; }
+    .data-table th, .data-table td { padding: 8px 14px; text-align: left; border-bottom: 1px solid var(--line); }
     .data-table th { color: var(--muted); font-weight: normal; }
     .data-table tr:last-child td, .data-table tr:last-child th { border-bottom: none; }
     .data-table .val { color: var(--accent); }
 
-    /* Telemetry Pane */
-    .telemetry {
-      display: flex;
-      flex-direction: column;
-      gap: 24px;
-      height: 100%;
-    }
+    .telemetry { display: flex; flex-direction: column; gap: 20px; }
+    .arch-diagram { background: var(--panel-2); border: 1px solid var(--panel-border); border-radius: 8px; padding: 24px; display: flex; align-items: center; justify-content: center; }
+    .terminal-wrap { background: #000; border: 1px solid var(--panel-border); border-radius: 8px; overflow: hidden; min-height: 230px; display: flex; flex-direction: column; }
+    .term-header { background: var(--panel-2); padding: 9px 14px; font-family: monospace; font-size: 0.76rem; color: var(--muted); border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; }
+    .term-body { flex: 1; padding: 16px; font-family: "Cascadia Code", "Fira Code", Menlo, monospace; font-size: 0.82rem; line-height: 1.6; color: #a5b4fc; overflow-y: auto; white-space: pre-wrap; max-height: 260px; }
 
-    .arch-diagram {
-      background: var(--panel);
-      border: 1px solid var(--panel-border);
-      border-radius: 8px;
-      padding: 32px;
-      box-shadow: var(--shadow);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .terminal-wrap {
-      flex: 1;
-      background: #000;
-      border: 1px solid var(--panel-border);
-      border-radius: 8px;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      min-height: 250px;
-    }
-    .term-header {
-      background: var(--panel);
-      padding: 10px 16px;
-      font-family: monospace;
-      font-size: 0.8rem;
-      color: var(--muted);
-      border-bottom: 1px solid var(--line);
-      display: flex;
-      justify-content: space-between;
-    }
-    .term-body {
-      flex: 1;
-      padding: 20px;
-      font-family: "Cascadia Code", "Fira Code", Menlo, monospace;
-      font-size: 0.85rem;
-      line-height: 1.6;
-      color: #a5b4fc;
-      overflow-y: auto;
-      white-space: pre-wrap;
-    }
-    
     .text-danger { color: var(--danger); }
     .text-success { color: var(--success); }
     .text-warn { color: var(--warn); }
     .text-muted { color: var(--muted); }
     .text-command { color: #fff; font-weight: 600; }
 
-    /* SVG Animations */
+    .replay-steps { padding: 0 24px 24px; }
+    .replay-steps ol { margin: 0; padding-left: 20px; color: var(--muted); font-size: 0.85rem; line-height: 2; }
+    .replay-steps li span.ok { color: var(--success); font-family: monospace; }
+
     @keyframes flow-fwd { to { stroke-dashoffset: -24; } }
     @keyframes pulse-warn { 0%, 100% { filter: drop-shadow(0 0 4px #fbbf24); } 50% { filter: drop-shadow(0 0 16px #fbbf24); } }
     @keyframes pulse-success { 0%, 100% { filter: drop-shadow(0 0 4px var(--accent)); } 50% { filter: drop-shadow(0 0 16px var(--accent)); } }
-    
     .anim-flow { stroke-dasharray: 6 6; animation: flow-fwd 0.6s linear infinite; }
     .anim-fail { stroke-dasharray: 6 6; animation: flow-fwd 1s linear infinite; }
     .anim-pulse-warn { animation: pulse-warn 1.5s ease-in-out infinite; }
     .anim-pulse-success { animation: pulse-success 2s ease-in-out infinite; }
+
+    /* Builder surface cards */
+    .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 16px; }
+    .surface-card {
+      background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px; padding: 20px;
+      display: flex; flex-direction: column; gap: 8px; transition: border-color 0.15s;
+    }
+    .surface-card:hover { border-color: var(--accent); }
+    .surface-card .tag { font-family: monospace; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent); }
+    .surface-card h3 { margin: 0; font-size: 1rem; }
+    .surface-card p { margin: 0; color: var(--muted); font-size: 0.82rem; line-height: 1.5; flex: 1; }
+    .surface-card a.card-link { font-size: 0.8rem; font-family: monospace; }
+
+    /* Real vs replay */
+    .rvr-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    @media (max-width: 860px) { .rvr-grid { grid-template-columns: 1fr; } }
+    .rvr-col { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px; padding: 22px; }
+    .rvr-col h3 { margin: 0 0 14px; font-size: 0.95rem; display: flex; align-items: center; gap: 8px; }
+    .rvr-col.real h3 { color: var(--success); }
+    .rvr-col.replay h3 { color: var(--warn); }
+    .rvr-col.oos h3 { color: var(--muted); }
+    .rvr-col ul { margin: 0; padding-left: 18px; color: var(--muted); font-size: 0.85rem; line-height: 1.9; }
+    .rvr-source { margin-top: 30px; font-size: 0.82rem; color: var(--muted); text-align: center; }
+
+    /* Footer links */
+    footer { padding: 48px 0 64px; }
+    .links-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px 24px; margin-bottom: 32px; }
+    .links-grid a { font-size: 0.88rem; color: var(--muted); }
+    .links-grid a:hover { color: var(--accent); }
+    footer .fine-print { color: var(--muted); font-size: 0.78rem; border-top: 1px solid var(--panel-border); padding-top: 20px; }
   </style>
 </head>
 <body>
 
-  <!-- Sidebar Context -->
-  <aside>
-    <div class="brand">
-      <img src="logo.png" alt="Sluice logo" style="height: 32px; width: 32px; object-fit: contain; border-radius: 6px; mix-blend-mode: screen;" /> 
-      Sluice Console
-    </div>
-
-    <div class="sidebar-section">
-      <div class="sidebar-title">Documentation</div>
-      <a href="../docs/SUBMISSION.md" class="nav-link">Submission Overview</a>
-      <a href="../docs/SDK.md" class="nav-link">TypeScript SDK</a>
-      <a href="../docs/HTTP_API.md" class="nav-link">HTTP API Spec</a>
-      <a href="../docs/DECISION_LOG.md" class="nav-link">Live Proof Log</a>
-    </div>
-
-    <div class="sidebar-section">
-      <div class="sidebar-title">Protocol Insights</div>
-      <div class="context-card">
-        <strong>The Undocumented Floor</strong><br><br>
-        Fiber v0.8.1 enforces a <strong>99 CKB</strong> receiver-side reserve that silently stalls naive channel setups.<br><br>
-        Opener must fund: <em>Target + Reserve + Fee Headroom</em>.
+  <header class="topnav">
+    <div class="topnav-inner">
+      <div class="brand">
+        <img src="logo.png" alt="Sluice logo" />
+        Sluice <span class="badge-alpha">alpha</span>
       </div>
+      <nav class="topnav-links">
+        <a href="#playground">Playground</a>
+        <a href="#proof-replay">Proof Replay</a>
+        <a href="#builder-surfaces">Surfaces</a>
+        <a href="#real-vs-replay">Real vs Replay</a>
+        <a class="btn-ghost" href="https://github.com/Ticoworld/sluice" target="_blank" rel="noopener">GitHub</a>
+        <a class="btn-ghost" href="https://www.npmjs.com/package/@ticoworld/sluice" target="_blank" rel="noopener">npm</a>
+      </nav>
     </div>
+  </header>
 
-    <div style="margin-top: auto; font-family: monospace; font-size: 0.75rem; color: var(--muted); display: flex; flex-direction: column; gap: 8px;">
-      <div><span class="badge">CATEGORY 3</span> LSP Tooling</div>
-      <div><strong>Status:</strong> Local Replay Mode</div>
-    </div>
-  </aside>
+  <section class="hero">
+    <div class="wrap">
+      <div class="kicker">Category 3 &middot; Merchant, Liquidity, LSP &amp; Multi-Asset Infrastructure</div>
+      <h1 class="hero-title">The undocumented <span class="hl">99 CKB reserve floor</span> breaks Fiber receiving. Sluice automates the fix.</h1>
+      <p class="hero-sub">Installable SDK, CLI, and HTTP tooling for reserve-aware inbound liquidity on Fiber. Turns a receiver's "payment cannot route" into a channel-ready path and a successful retry.</p>
 
-  <!-- Main Console -->
-  <main>
-    <div class="topbar">
-      workspace / <strong>Live Execution Sandbox</strong>
-    </div>
-
-    <div class="console-grid">
-      <!-- Left: Controls -->
-      <div class="control-panel">
-        <div>
-          <div style="font-family: monospace; font-size: 0.8rem; color: var(--muted); margin-bottom: 12px; text-transform: uppercase;">1. Select Execution Mode</div>
-          <button id="btn-naive" class="btn">
-            Execute Naive Route
-            <span>$ fiber-rpc send_payment</span>
-          </button>
-          <button id="btn-sluice" class="btn" style="margin-top: 12px;">
-            Execute via Sluice JIT
-            <span>$ sluice prepare-inbound --execute</span>
-          </button>
-        </div>
-
-        <div class="data-card" id="quote-panel" style="opacity: 0.3; transition: opacity 0.3s;">
-          <div class="data-header">Sluice Quote Engine</div>
-          <table class="data-table">
-            <tr><th>Target Payment</th><td class="val" id="q-target">1 CKB</td></tr>
-            <tr><th>Receiver Reserve</th><td class="val" id="q-reserve">--</td></tr>
-            <tr><th>Opener Funding</th><td class="val" id="q-funding">--</td></tr>
-            <tr><th>Time to Ready</th><td class="val text-muted">~72s</td></tr>
-          </table>
-        </div>
+      <div class="install-block">
+        <span class="prompt mono">$</span>
+        <code id="install-cmd">npm install @ticoworld/sluice@alpha</code>
+        <button class="copy-btn" id="copy-install" type="button">Copy</button>
       </div>
 
-      <!-- Right: Telemetry -->
-      <div class="telemetry">
-        <div class="arch-diagram">
-          <svg id="flow-svg" viewBox="0 0 420 200" width="100%" style="display:block; max-width: 500px;">
-            <defs>
-              <marker id="arr-grey" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-                <path d="M 0 0 L 10 5 L 0 10 z" fill="#3f3f46"/>
-              </marker>
-              <marker id="arr-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-                <path d="M 0 0 L 10 5 L 0 10 z" fill="#f87171"/>
-              </marker>
-              <marker id="arr-cyan" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-                <path d="M 0 0 L 10 5 L 0 10 z" fill="#22d3ee"/>
-              </marker>
-              <filter id="glow">
-                <feGaussianBlur stdDeviation="3" result="blur"/>
-                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-              </filter>
-            </defs>
+      <div class="hero-ctas">
+        <a class="btn btn-primary" href="#playground">View SDK Playground</a>
+        <a class="btn btn-secondary" href="#proof-replay">Replay Proof</a>
+        <a class="btn btn-secondary" href="https://github.com/Ticoworld/sluice" target="_blank" rel="noopener">GitHub</a>
+        <a class="btn btn-secondary" href="https://www.npmjs.com/package/@ticoworld/sluice" target="_blank" rel="noopener">npm package</a>
+      </div>
+    </div>
+  </section>
 
-            <!-- Sender -->
-            <rect x="20" y="75" width="90" height="40" rx="4" fill="#18181b" stroke="#3f3f46" stroke-width="1.5"/>
-            <text x="65" y="99" fill="#a1a1aa" font-family="monospace" font-size="12" text-anchor="middle">Sender</text>
+  <section id="playground">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="eyebrow">SDK Playground</div>
+        <h2>How builders actually use Sluice</h2>
+        <p>Pick a surface. Left is real, runnable code taken directly from this repo's SDK and examples. Right is the deterministic output for the same 1 CKB proof case, sourced from the recorded proof data below &mdash; not a live interpreter.</p>
+      </div>
 
-            <!-- Sluice -->
-            <rect id="sluice-box" x="165" y="10" width="90" height="44" rx="4" fill="#18181b" stroke="#3f3f46" stroke-width="1.5"/>
-            <text x="210" y="30" fill="#22d3ee" font-family="monospace" font-size="13" text-anchor="middle" font-weight="bold">Sluice</text>
-            <text x="210" y="46" fill="#a1a1aa" font-family="monospace" font-size="9" text-anchor="middle">Coordinator</text>
-
-            <!-- Receiver -->
-            <rect x="310" y="75" width="90" height="40" rx="4" fill="#18181b" stroke="#3f3f46" stroke-width="1.5"/>
-            <text x="355" y="99" fill="#a1a1aa" font-family="monospace" font-size="12" text-anchor="middle">Receiver</text>
-
-            <!-- Reserve Engine -->
-            <rect x="155" y="130" width="110" height="36" rx="4" fill="#18181b" stroke="#27272a" stroke-width="1"/>
-            <text x="210" y="145" fill="#52525b" font-family="monospace" font-size="9" text-anchor="middle">Reserve Engine</text>
-            <text x="210" y="158" fill="#52525b" font-family="monospace" font-size="9" text-anchor="middle">Quote &middot; Readiness</text>
-
-            <!-- Dash to engine -->
-            <line id="path-engine" x1="210" y1="54" x2="210" y2="130" stroke="#27272a" stroke-width="1" stroke-dasharray="4"/>
-
-            <!-- Paths -->
-            <path id="path-direct" d="M 110 95 L 310 95" stroke="#3f3f46" stroke-width="2" stroke-dasharray="6 4" fill="none" marker-end="url(#arr-grey)" opacity="1"/>
-            <path id="path-to-sluice" d="M 108 82 Q 165 42 165 32" stroke="#22d3ee" stroke-width="2.5" fill="none" marker-end="url(#arr-cyan)" opacity="0" filter="url(#glow)"/>
-            <path id="path-from-sluice" d="M 255 32 Q 310 42 312 82" stroke="#22d3ee" stroke-width="2.5" fill="none" marker-end="url(#arr-cyan)" opacity="0" filter="url(#glow)"/>
-
-            <!-- Labels -->
-            <text id="lbl-fail" x="210" y="88" fill="#f87171" font-family="monospace" font-size="11" text-anchor="middle" opacity="0">❌ No Route</text>
-            <text id="lbl-provisioning" x="210" y="88" fill="#fbbf24" font-family="monospace" font-size="11" text-anchor="middle" opacity="0">⏳ Provisioning…</text>
-            <text id="lbl-success" x="210" y="88" fill="#4ade80" font-family="monospace" font-size="11" text-anchor="middle" opacity="0">✅ Paid</text>
-            
-            <text id="phase-label" x="210" y="190" fill="#52525b" font-family="monospace" font-size="10" text-anchor="middle">Idle: Waiting for execution command...</text>
-          </svg>
+      <div class="playground">
+        <div class="tabs" id="pg-tabs">
+          <button class="tab-btn active" data-tab="sdk">SDK</button>
+          <button class="tab-btn" data-tab="cli">CLI</button>
+          <button class="tab-btn" data-tab="http">HTTP</button>
+          <button class="tab-btn" data-tab="wallet">Wallet backend</button>
+          <button class="tab-btn" data-tab="merchant">Merchant backend</button>
         </div>
-
-        <div class="terminal-wrap">
-          <div class="term-header">
-            <span>Execution Telemetry (node13 &rarr; node14)</span>
-            <span id="term-status" style="color: var(--muted);">Idle</span>
+        <div class="playground-grid">
+          <div class="pg-pane code">
+            <div class="pg-pane-label">Code</div>
+            <pre id="pg-code"></pre>
           </div>
-          <div class="term-body" id="term-output">Select an execution mode to begin...</div>
+          <div class="pg-pane">
+            <div class="pg-pane-label">Deterministic output</div>
+            <div id="pg-output"></div>
+            <div class="pg-note" id="pg-note"></div>
+          </div>
         </div>
       </div>
-
     </div>
-  </main>
+  </section>
+
+  <section class="alt" id="proof-replay">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="eyebrow">Proof Replay</div>
+        <h2>Recorded Local Proof Replay</h2>
+        <p>This walks through the real before/after payment proof recorded on local Fiber nodes <code class="mono">node13</code> &rarr; <code class="mono">node14</code>.</p>
+      </div>
+
+      <div class="replay-shell">
+        <div class="replay-header">
+          <div class="title">Recorded Local Proof Replay</div>
+          <div class="replay-status-pill">node13 &rarr; node14 &middot; Phase 8B</div>
+        </div>
+        <p class="honesty-banner">
+          This hosted playground replays a <strong>recorded</strong> local Fiber proof. It does not execute Fiber RPC calls in your browser. Real execution runs locally with <code>npm run demo</code> &mdash; see <a href="../docs/REAL_VS_SIMULATED.md">docs/REAL_VS_SIMULATED.md</a> for exactly what is real, replayed, and out of scope.
+        </p>
+
+        <div class="console-grid">
+          <div class="control-panel">
+            <div>
+              <div style="font-family: monospace; font-size: 0.78rem; color: var(--muted); margin-bottom: 12px; text-transform: uppercase;">Select a recorded path</div>
+              <button id="btn-naive" class="replay-btn">
+                Replay: Naive Route (no Sluice)
+                <span>$ fiber-rpc send_payment</span>
+              </button>
+              <button id="btn-sluice" class="replay-btn" style="margin-top: 12px;">
+                Replay: Recorded Proof via Sluice
+                <span>$ sluice prepare-inbound --execute</span>
+              </button>
+            </div>
+
+            <div class="data-card" id="quote-panel" style="opacity: 0.3; transition: opacity 0.3s;">
+              <div class="data-header">Sluice Quote Engine (recorded)</div>
+              <table class="data-table">
+                <tr><th>Target Payment</th><td class="val" id="q-target">1 CKB</td></tr>
+                <tr><th>Receiver Reserve</th><td class="val" id="q-reserve">--</td></tr>
+                <tr><th>Opener Funding</th><td class="val" id="q-funding">--</td></tr>
+                <tr><th>Time to Ready</th><td class="val text-muted">~72s (recorded)</td></tr>
+              </table>
+            </div>
+          </div>
+
+          <div class="telemetry">
+            <div class="arch-diagram">
+              <svg id="flow-svg" viewBox="0 0 420 200" width="100%" style="display:block; max-width: 480px;">
+                <defs>
+                  <marker id="arr-grey" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                    <path d="M 0 0 L 10 5 L 0 10 z" fill="#3f3f46"/>
+                  </marker>
+                  <marker id="arr-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                    <path d="M 0 0 L 10 5 L 0 10 z" fill="#f87171"/>
+                  </marker>
+                  <marker id="arr-cyan" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                    <path d="M 0 0 L 10 5 L 0 10 z" fill="#22d3ee"/>
+                  </marker>
+                  <filter id="glow">
+                    <feGaussianBlur stdDeviation="3" result="blur"/>
+                    <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                  </filter>
+                </defs>
+
+                <rect x="20" y="75" width="90" height="40" rx="4" fill="#18181b" stroke="#3f3f46" stroke-width="1.5"/>
+                <text x="65" y="99" fill="#a1a1aa" font-family="monospace" font-size="12" text-anchor="middle">Sender</text>
+
+                <rect id="sluice-box" x="165" y="10" width="90" height="44" rx="4" fill="#18181b" stroke="#3f3f46" stroke-width="1.5"/>
+                <text x="210" y="30" fill="#22d3ee" font-family="monospace" font-size="13" text-anchor="middle" font-weight="bold">Sluice</text>
+                <text x="210" y="46" fill="#a1a1aa" font-family="monospace" font-size="9" text-anchor="middle">Coordinator</text>
+
+                <rect x="310" y="75" width="90" height="40" rx="4" fill="#18181b" stroke="#3f3f46" stroke-width="1.5"/>
+                <text x="355" y="99" fill="#a1a1aa" font-family="monospace" font-size="12" text-anchor="middle">Receiver</text>
+
+                <rect x="155" y="130" width="110" height="36" rx="4" fill="#18181b" stroke="#27272a" stroke-width="1"/>
+                <text x="210" y="145" fill="#52525b" font-family="monospace" font-size="9" text-anchor="middle">Reserve Engine</text>
+                <text x="210" y="158" fill="#52525b" font-family="monospace" font-size="9" text-anchor="middle">Quote &middot; Readiness</text>
+
+                <line id="path-engine" x1="210" y1="54" x2="210" y2="130" stroke="#27272a" stroke-width="1" stroke-dasharray="4"/>
+
+                <path id="path-direct" d="M 110 95 L 310 95" stroke="#3f3f46" stroke-width="2" stroke-dasharray="6 4" fill="none" marker-end="url(#arr-grey)" opacity="1"/>
+                <path id="path-to-sluice" d="M 108 82 Q 165 42 165 32" stroke="#22d3ee" stroke-width="2.5" fill="none" marker-end="url(#arr-cyan)" opacity="0" filter="url(#glow)"/>
+                <path id="path-from-sluice" d="M 255 32 Q 310 42 312 82" stroke="#22d3ee" stroke-width="2.5" fill="none" marker-end="url(#arr-cyan)" opacity="0" filter="url(#glow)"/>
+
+                <text id="lbl-fail" x="210" y="88" fill="#f87171" font-family="monospace" font-size="11" text-anchor="middle" opacity="0">No Route</text>
+                <text id="lbl-provisioning" x="210" y="88" fill="#fbbf24" font-family="monospace" font-size="11" text-anchor="middle" opacity="0">Provisioning...</text>
+                <text id="lbl-success" x="210" y="88" fill="#4ade80" font-family="monospace" font-size="11" text-anchor="middle" opacity="0">Paid</text>
+
+                <text id="phase-label" x="210" y="190" fill="#52525b" font-family="monospace" font-size="10" text-anchor="middle">Idle: select a recorded path above...</text>
+              </svg>
+            </div>
+
+            <div class="terminal-wrap">
+              <div class="term-header">
+                <span>Recorded Telemetry (node13 &rarr; node14)</span>
+                <span id="term-status" style="color: var(--muted);">Idle</span>
+              </div>
+              <div class="term-body" id="term-output">Select a recorded path to begin the replay...</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="replay-steps">
+          <div class="pg-pane-label" style="margin-bottom: 10px;">What this replay walks through</div>
+          <ol>
+            <li>Before Sluice: payment failed, no route <span class="ok">(recorded)</span></li>
+            <li>Sluice quote: reserve-aware funding calculated <span class="ok">(recorded)</span></li>
+            <li>Channel open: succeeded <span class="ok">(recorded)</span></li>
+            <li>Receiver accept: succeeded <span class="ok">(recorded)</span></li>
+            <li>ChannelReady: reached <span class="ok">(recorded)</span></li>
+            <li>Payment retry: Success <span class="ok">(recorded)</span></li>
+            <li>Receiver invoice: Paid <span class="ok">(recorded)</span></li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="builder-surfaces">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="eyebrow">Builder Surfaces</div>
+        <h2>This is infrastructure, not a hackathon trick</h2>
+        <p>Every surface below is real code in this repository &mdash; typed, tested, and either published to npm or runnable locally.</p>
+      </div>
+      <div class="cards-grid">
+        <div class="surface-card">
+          <div class="tag">Package</div>
+          <h3>TypeScript SDK</h3>
+          <p>Typed <code class="mono">Sluice</code> client for quote, readiness, prepare, and payment proof. Published on npm.</p>
+          <a class="card-link" href="../docs/SDK.md">docs/SDK.md &rarr;</a>
+        </div>
+        <div class="surface-card">
+          <div class="tag">Operator</div>
+          <h3>CLI</h3>
+          <p>Local operator and proof-runner commands: quote, readiness, prepare-inbound, prove-payment, doctor.</p>
+          <a class="card-link" href="../docs/DEMO.md">docs/DEMO.md &rarr;</a>
+        </div>
+        <div class="surface-card">
+          <div class="tag">Integration</div>
+          <h3>HTTP API</h3>
+          <p>Wraps the SDK for external systems: wallets, merchant backends, and services that aren't Node.js.</p>
+          <a class="card-link" href="../docs/HTTP_API.md">docs/HTTP_API.md &rarr;</a>
+        </div>
+        <div class="surface-card">
+          <div class="tag">Contract</div>
+          <h3>OpenAPI spec</h3>
+          <p>Machine-readable contract for the HTTP surface &mdash; generate clients or wire up API tooling directly.</p>
+          <a class="card-link" href="../docs/openapi.yaml">docs/openapi.yaml &rarr;</a>
+        </div>
+        <div class="surface-card">
+          <div class="tag">Deploy</div>
+          <h3>Docker deploy surface</h3>
+          <p>Container recipe for running the Sluice HTTP service, plus operator/merchant/wallet deployment patterns.</p>
+          <a class="card-link" href="../docs/DEPLOYMENT.md">docs/DEPLOYMENT.md &rarr;</a>
+        </div>
+        <div class="surface-card">
+          <div class="tag">Example</div>
+          <h3>Wallet backend example</h3>
+          <p>Checks receiver readiness before showing a receive invoice as payable, falling back to a Sluice prepare plan.</p>
+          <a class="card-link" href="../examples/wallet-backend/receiver-readiness.ts">examples/wallet-backend &rarr;</a>
+        </div>
+        <div class="surface-card">
+          <div class="tag">Example</div>
+          <h3>Merchant checkout example</h3>
+          <p>Concrete retry flow: failed payment, Sluice prepare call, successful retry after ChannelReady.</p>
+          <a class="card-link" href="../examples/merchant-checkout/checkout-flow.ts">examples/merchant-checkout &rarr;</a>
+        </div>
+        <div class="surface-card">
+          <div class="tag">Diagnostics</div>
+          <h3>Operator doctor command</h3>
+          <p>Read-only setup check for the configured service and receiver nodes before running anything live.</p>
+          <a class="card-link" href="../docs/DEMO.md">docs/DEMO.md &rarr;</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="alt" id="real-vs-replay">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="eyebrow">Honesty Model</div>
+        <h2>Real vs. replay vs. out of scope</h2>
+        <p>Full detail lives in <a href="../docs/REAL_VS_SIMULATED.md">docs/REAL_VS_SIMULATED.md</a>. Summary:</p>
+      </div>
+      <div class="rvr-grid">
+        <div class="rvr-col real">
+          <h3>Real</h3>
+          <ul>
+            <li>Local Fiber proof (node13 &rarr; node14)</li>
+            <li>npm package install (<code class="mono">@ticoworld/sluice</code>)</li>
+            <li>SDK / HTTP / CLI surfaces</li>
+          </ul>
+        </div>
+        <div class="rvr-col replay">
+          <h3>Replay</h3>
+          <ul>
+            <li>This hosted browser proof visualization</li>
+          </ul>
+        </div>
+        <div class="rvr-col oos">
+          <h3>Out of scope</h3>
+          <ul>
+            <li>Production LSP</li>
+            <li>Hosted live Fiber service</li>
+            <li>Custody</li>
+            <li>Wallet UI</li>
+            <li>Merchant UI</li>
+          </ul>
+        </div>
+      </div>
+      <p class="rvr-source">Source of truth: <a href="../docs/REAL_VS_SIMULATED.md">docs/REAL_VS_SIMULATED.md</a></p>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap">
+      <div class="section-head" style="margin-bottom: 20px;">
+        <div class="eyebrow">Links</div>
+      </div>
+      <div class="links-grid">
+        <a href="https://github.com/Ticoworld/sluice" target="_blank" rel="noopener">GitHub repo</a>
+        <a href="https://www.npmjs.com/package/@ticoworld/sluice" target="_blank" rel="noopener">npm package</a>
+        <a href="../README.md">README</a>
+        <a href="../docs/REAL_VS_SIMULATED.md">docs/REAL_VS_SIMULATED.md</a>
+        <a href="../docs/SDK.md">docs/SDK.md</a>
+        <a href="../docs/HTTP_API.md">docs/HTTP_API.md</a>
+        <a href="../docs/openapi.yaml">docs/openapi.yaml</a>
+        <a href="../docs/DEMO.md">docs/DEMO.md</a>
+        <a href="../docs/SUBMISSION.md">docs/SUBMISSION.md</a>
+      </div>
+      <div class="fine-print">
+        Sluice is an alpha, hackathon-stage submission. Category 3: Merchant, Liquidity, LSP, and Multi-Asset Infrastructure.
+      </div>
+    </div>
+  </footer>
 
   <script>
+    // ---- Playground tab content (static, deterministic — no interpreter) ----
+    const pgTabs = {
+      sdk: {
+        code: `import { Sluice } from "@ticoworld/sluice";
+
+const sluice = new Sluice({
+  serviceRpcUrl: "http://127.0.0.1:8347",
+  receiverRpcUrl: "http://127.0.0.1:8357",
+});
+
+const quote = sluice.quote({ amountCkb: "1" });`,
+        output: [
+          ["Target Payment", "1 CKB"],
+          ["Receiver Reserve", "99 CKB"],
+          ["Opener Funding", "120 CKB"],
+          ["Usable Liquidity", "~21 CKB"],
+        ],
+        note: "Source: src/sdk/sluice.ts — Sluice.quote(). Same values as the recorded proof below.",
+      },
+      cli: {
+        code: `npx tsx src/index.ts quote --amount-ckb 1
+
+npx tsx src/index.ts readiness \\
+  --service node4 --receiver-pubkey <pubkey> --amount-ckb 1
+
+npx tsx src/index.ts prepare-inbound \\
+  --service node4 --receiver node9 --amount-ckb 1`,
+        output: [
+          ["Command", "quote"],
+          ["Target Payment", "1 CKB"],
+          ["Receiver Reserve", "99 CKB"],
+          ["Opener Funding", "120 CKB"],
+        ],
+        note: "Source: docs/DEMO.md — Local Runnable Demo section. Same commands used to produce the recorded proof.",
+      },
+      http: {
+        code: `curl -X POST http://127.0.0.1:8787/v1/quote \\
+  -H "Content-Type: application/json" \\
+  --data-raw '{"amountCkb":"1"}'`,
+        output: [
+          ["HTTP", "POST /v1/quote"],
+          ["target_payment", "1 CKB"],
+          ["receiver_reserve", "99 CKB"],
+          ["opener_funding", "120 CKB"],
+        ],
+        note: "Source: examples/http/curl.md. Default local server: npx tsx src/index.ts serve --port 8787.",
+      },
+      wallet: {
+        code: `const readiness = await sluice.checkReadiness({
+  receiverRpcUrl,
+  amountCkb: "1",
+});
+
+if (readiness.readiness_status !== "ready") {
+  const prepare = await sluice.prepareInbound({
+    receiverRpcUrl,
+    amountCkb: "1",
+    acceptMode: "detect",
+    dryRun: true,
+  });
+}`,
+        output: [
+          ["readiness_status", "not_ready"],
+          ["reason", "No ChannelReady path yet"],
+          ["action", "prepareInbound (dry run)"],
+        ],
+        note: "Source: examples/wallet-backend/receiver-readiness.ts. Checked before showing a receive invoice as payable.",
+      },
+      merchant: {
+        code: `const first = await attemptMerchantPayment();
+// fails: no route
+
+const prepare = await sluice.prepareInbound({
+  receiverRpcUrl,
+  amountCkb: "1",
+  acceptMode: "detect",
+  dryRun: true,
+});
+
+const retry = await retryMerchantPayment();
+// succeeds after ChannelReady`,
+        output: [
+          ["First attempt", "Failed — no route"],
+          ["Sluice prepare", "Planned"],
+          ["Retry after ChannelReady", "Success"],
+        ],
+        note: "Source: examples/merchant-checkout/checkout-flow.ts. Same retry pattern as the recorded proof below.",
+      },
+    };
+
+    function renderPgTab(key) {
+      const tab = pgTabs[key];
+      document.getElementById("pg-code").textContent = tab.code;
+      const output = document.getElementById("pg-output");
+      output.innerHTML = tab.output
+        .map(([k, v]) => `<div class="pg-output-line"><span class="k">${k}</span><span class="v">${v}</span></div>`)
+        .join("");
+      document.getElementById("pg-note").textContent = tab.note;
+    }
+
+    document.querySelectorAll(".tab-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        renderPgTab(btn.dataset.tab);
+      });
+    });
+
+    renderPgTab("sdk");
+
+    // ---- Copy install command ----
+    const copyBtn = document.getElementById("copy-install");
+    copyBtn.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(document.getElementById("install-cmd").textContent);
+        copyBtn.textContent = "Copied";
+        copyBtn.classList.add("copied");
+        setTimeout(() => {
+          copyBtn.textContent = "Copy";
+          copyBtn.classList.remove("copied");
+        }, 1500);
+      } catch (e) {
+        // clipboard API unavailable; no-op
+      }
+    });
+
+    // ---- Recorded proof replay engine (reused from prior build, relabeled for honesty) ----
     let proofData = null;
     let isExecuting = false;
 
-    // DOM Elements
     const btnNaive = document.getElementById("btn-naive");
     const btnSluice = document.getElementById("btn-sluice");
     const termOutput = document.getElementById("term-output");
     const termStatus = document.getElementById("term-status");
     const quotePanel = document.getElementById("quote-panel");
-    
-    // SVG Elements
+
     const pathDirect    = document.getElementById("path-direct");
     const pathToSluice  = document.getElementById("path-to-sluice");
     const pathFromSluice= document.getElementById("path-from-sluice");
@@ -424,23 +707,23 @@
       pathDirect.setAttribute("stroke", "#3f3f46");
       pathDirect.setAttribute("class", "");
       pathDirect.setAttribute("marker-end", "url(#arr-grey)");
-      
+
       pathToSluice.style.opacity = 0;
       pathToSluice.setAttribute("class", "");
       pathFromSluice.style.opacity = 0;
       pathFromSluice.setAttribute("class", "");
-      
+
       pathEngine.setAttribute("stroke", "#27272a");
       pathEngine.setAttribute("class", "");
 
       lblFail.style.opacity = 0;
       lblProvisioning.style.opacity = 0;
       lblSuccess.style.opacity = 0;
-      
+
       sluiceBox.setAttribute("stroke", "#3f3f46");
       sluiceBox.setAttribute("class", "");
-      phaseLabel.textContent = "Idle: Waiting for execution command...";
-      
+      phaseLabel.textContent = "Idle: select a recorded path above...";
+
       quotePanel.style.opacity = 0.3;
       document.getElementById("q-reserve").textContent = "--";
       document.getElementById("q-funding").textContent = "--";
@@ -455,111 +738,107 @@
       return new Promise(resolve => setTimeout(resolve, ms));
     }
 
-    async function executeNaive() {
+    async function replayNaive() {
       if (isExecuting) return;
       isExecuting = true;
       resetSVG();
-      
+
       btnNaive.classList.add("fail-active");
       btnSluice.classList.remove("active");
       termOutput.innerHTML = "";
-      termStatus.textContent = "Routing...";
+      termStatus.textContent = "Replaying...";
       termStatus.style.color = "var(--warn)";
 
       appendTerminal(`<span class="text-command">$ fiber-rpc send_payment</span>`);
-      appendTerminal(`<span class="text-muted">Initiating standard pathfinding...</span>`);
-      
-      // SVG Failure State
+      appendTerminal(`<span class="text-muted">Recorded: standard pathfinding attempt...</span>`);
+
       pathDirect.setAttribute("stroke", "#f87171");
       pathDirect.setAttribute("class", "anim-fail");
       pathDirect.setAttribute("marker-end", "url(#arr-red)");
-      phaseLabel.textContent = "Attempt: direct route";
-      
+      phaseLabel.textContent = "Replaying: direct route (recorded)";
+
       await delay(800);
-      
+
       lblFail.style.opacity = 1;
-      phaseLabel.textContent = "Fatal: Receiver lacks inbound reserve.";
+      phaseLabel.textContent = "Recorded outcome: receiver lacks inbound reserve.";
       appendTerminal(`\n<span class="text-danger">${proofData.live_proof.before_failure}</span>`);
-      
-      termStatus.textContent = "Failed";
+
+      termStatus.textContent = "Failed (recorded)";
       termStatus.style.color = "var(--danger)";
-      
+
       btnNaive.classList.remove("fail-active");
       isExecuting = false;
     }
 
-    async function executeSluice() {
+    async function replaySluice() {
       if (isExecuting) return;
       isExecuting = true;
       resetSVG();
-      
+
       btnSluice.classList.add("active");
       btnNaive.classList.remove("fail-active");
       termOutput.innerHTML = "";
-      termStatus.textContent = "Sluice Intercept";
+      termStatus.textContent = "Replaying Sluice path";
       termStatus.style.color = "var(--accent)";
 
       appendTerminal(`<span class="text-command">$ sluice prepare-inbound --execute</span>`);
-      appendTerminal(`<span class="text-muted">Intercepted routing failure. Requesting reserve-aware quote...</span>`);
-      
-      // SVG Sluice Routing 
+      appendTerminal(`<span class="text-muted">Recorded: reserve-aware quote requested...</span>`);
+
       pathDirect.style.opacity = 0.15;
       pathToSluice.style.opacity = 1;
       pathToSluice.setAttribute("class", "anim-flow");
       pathFromSluice.style.opacity = 0.3;
-      
+
       sluiceBox.setAttribute("stroke", "#fbbf24");
       sluiceBox.setAttribute("class", "anim-pulse-warn");
       pathEngine.setAttribute("stroke", "var(--accent)");
-      
+
       lblProvisioning.style.opacity = 1;
-      phaseLabel.textContent = "Sluice: Quoting and provisioning JIT channel...";
+      phaseLabel.textContent = "Recorded: quoting and provisioning JIT channel...";
 
       await delay(1200);
-      
-      // Quote arrives
+
       const q = proofData.quote;
       document.getElementById("q-reserve").textContent = q.receiver_reserve;
       document.getElementById("q-funding").textContent = q.opener_funding;
       quotePanel.style.opacity = 1;
-      
+
       appendTerminal(`\nTarget: 1 CKB | Receiver Reserve: ${q.receiver_reserve} | Opener Funding: ${q.opener_funding}`);
-      appendTerminal(`<span class="text-success">Quote accepted. Provisioning on-chain...</span>`);
-      
-      termStatus.textContent = "Waiting on ChannelReady";
+      appendTerminal(`<span class="text-success">Quote accepted. Provisioning on-chain (recorded)...</span>`);
+
+      termStatus.textContent = "Waiting on ChannelReady (recorded)";
       termStatus.style.color = "var(--warn)";
 
       await delay(1800);
 
-      // Success
       pathEngine.setAttribute("stroke", "#27272a");
       pathFromSluice.style.opacity = 1;
       pathFromSluice.setAttribute("class", "anim-flow");
-      
+
       lblProvisioning.style.opacity = 0;
       lblSuccess.style.opacity = 1;
-      
+
       sluiceBox.setAttribute("stroke", "#22d3ee");
       sluiceBox.setAttribute("class", "anim-pulse-success");
-      phaseLabel.textContent = "ChannelReady — payment routed via Sluice ✓";
-      
+      phaseLabel.textContent = "ChannelReady — payment routed via Sluice (recorded)";
+
       const p = proofData.live_proof;
       appendTerminal(`\nTemp Channel ID: ${p.temporary_channel_id}`);
       appendTerminal(`Final Channel ID: ${p.channel_id}`);
-      appendTerminal(`<span class="text-muted">Wait time: 72.7s (simulated)</span>`);
+      appendTerminal(`<span class="text-muted">Time to ready: 72.7s (recorded pacing)</span>`);
       appendTerminal(`\n<span class="text-command">$ fiber-rpc send_payment (retry)</span>`);
-      appendTerminal(`Routing via Sluice...`);
+      appendTerminal(`Routing via Sluice (recorded)...`);
       appendTerminal(`Payment status: <span class="text-success">${p.after_payment}</span>`);
-      
-      termStatus.textContent = "Success";
+
+      termStatus.textContent = "Success (recorded)";
       termStatus.style.color = "var(--success)";
-      
+
       btnSluice.classList.remove("active");
       isExecuting = false;
     }
 
-    btnNaive.addEventListener("click", executeNaive);
-    btnSluice.addEventListener("click", executeSluice);
+    btnNaive.addEventListener("click", replayNaive);
+    btnSluice.addEventListener("click", replaySluice);
 
     loadData();
   </script>

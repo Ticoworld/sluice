@@ -387,3 +387,14 @@ Decision:
 - npm assigns `latest` to a package's first-ever published version regardless of the `--tag` used, and that tag cannot be removed while it is the package's only version. `latest` and `alpha` currently point at the same version as an unavoidable consequence of this being the first publish. Docs were updated to explicitly pin `npm install @ticoworld/sluice@alpha` rather than relying on the bare install resolving correctly.
 - Added `examples/wallet-backend/receiver-readiness.ts`, closing the one hackathon-rubric-named consumer audience (wallets, alongside merchants/services/operators already covered) with no prior example. Uses the SDK's real `readiness_status` field (`"ready" | "not_ready" | "unknown"`), not a `.ready` boolean, matching `src/core/readiness.ts`.
 - No live execute was run.
+
+## 2026-07-11 demo/index.html redesign: install-first playground
+
+Decision:
+
+- Rebuilt `demo/index.html` from a single console-style page into: hero (install command, SDK snippet, CTAs), an SDK playground (SDK/CLI/HTTP/wallet backend/merchant backend tabs with real code from this repo and deterministic output, not a live interpreter), the existing proof-replay engine (kept, not rewritten, only relabeled), a builder-surfaces card grid, and a real/replay/out-of-scope section.
+- All playground tab snippets are copied from the actual source files (`src/sdk/sluice.ts`, `docs/DEMO.md`, `examples/http/curl.md`, `examples/wallet-backend/receiver-readiness.ts`, `examples/merchant-checkout/checkout-flow.ts`) so the playground can't drift from what the repo actually does.
+- Renamed "Live Execution Sandbox" to "Recorded Local Proof Replay" and added an explicit honesty banner linking to `docs/REAL_VS_SIMULATED.md`, so the page cannot be mistaken for a live Fiber executor.
+- No JS interpreter, no live Fiber calls from the browser, no backend/auth/database added. The proof-replay engine (SVG animation, terminal telemetry) is the same code as before, sourced from `proof-data.json`, only relabeled for honesty.
+- Verified locally: served `demo/` on a local static server, syntax-checked the inline script, confirmed all linked repo files exist, and drove the page with a headless-Chromium script to screenshot the hero, both playground tab states, the proof-replay idle and success states, the builder-surface cards, and the real-vs-replay section. Zero console errors.
+- No live execute was run.
