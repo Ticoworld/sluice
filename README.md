@@ -14,14 +14,29 @@ Status: submission package.
 
 > **Alpha release.** Sluice is hackathon-stage Fiber infrastructure tooling. The SDK, CLI, and HTTP API are usable for local integration and testing, but this is not production LSP infrastructure yet. See [docs/REAL_VS_SIMULATED.md](docs/REAL_VS_SIMULATED.md) for exactly what is real, replayed, and out of scope.
 
-## Quick Demo
+## Install
+
+```bash
+npm install @ticoworld/sluice@alpha
+```
+
+```ts
+import { Sluice } from "@ticoworld/sluice";
+
+const sluice = new Sluice({ serviceRpcUrl: "http://127.0.0.1:8257" });
+const quote = sluice.quote({ amountCkb: "1" });
+```
+
+See [docs/SDK.md](docs/SDK.md) for the full SDK surface, and [docs/HTTP_API.md](docs/HTTP_API.md) for the HTTP API if you'd rather integrate from outside Node.js.
+
+## Verify the Live Proof Locally
 
 ```powershell
 cp .env.demo.example .env.demo
 npm run demo
 ```
 
-For the maintainer-only commands and the local proof runbook, see [docs/DEMO.md](docs/DEMO.md).
+This runs the same before/after payment proof described in [docs/REAL_VS_SIMULATED.md](docs/REAL_VS_SIMULATED.md) against local Fiber nodes. For the maintainer-only commands and the local proof runbook, see [docs/DEMO.md](docs/DEMO.md).
 
 ## Repo Map
 

@@ -14,11 +14,15 @@ Timothy Orichi
 
 ## Repo
 
-<your public GitHub repo link>
+https://github.com/Ticoworld/sluice
+
+## Package
+
+https://www.npmjs.com/package/@ticoworld/sluice (published, `alpha` dist-tag: `npm install @ticoworld/sluice@alpha`)
 
 ## Hosted Demo
 
-<your deployed static demo link>
+<your deployed static demo link> (pending: enable GitHub Pages, Settings -> Pages -> Deploy from branch -> master -> / (root); demo will be reachable at https://ticoworld.github.io/sluice/demo/index.html)
 
 ## Video
 
@@ -27,7 +31,8 @@ Timothy Orichi
 ## Final Submission Checklist
 
 - Team members: Timothy Orichi
-- Repository link: <your public GitHub repo link>
+- Repository link: https://github.com/Ticoworld/sluice
+- Package link: https://www.npmjs.com/package/@ticoworld/sluice
 - Hosted demo link: <your deployed static demo link>
 - Video link: <your YouTube/Loom/Drive video link>
 - Technical breakdown: [TECHNICAL_BREAKDOWN.md](TECHNICAL_BREAKDOWN.md)
@@ -37,8 +42,9 @@ Timothy Orichi
 
 - Local proof: complete
 - Static demo: ready
-- Hosted deployment: pending
-- Final submission links: pending
+- npm alpha package: published and verified via real registry install
+- Hosted deployment: pending (GitHub Pages toggle only, no code changes needed)
+- Final submission links: hosted demo and video still pending
 
 ## Technical Summary
 
