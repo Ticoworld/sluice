@@ -429,3 +429,12 @@ Decision:
 - Increased hero heading, sub-headline, install-block, and button sizing now that the hero is full-viewport, so the larger space doesn't read as empty.
 - Verified with the same headless-Chromium screenshot method across the SDK, CLI, and wallet-backend tabs: syntax highlighting renders correctly, zero console errors.
 - No live execute was run.
+
+## 2026-07-12 demo/index.html combined before/after auto-play
+
+Decision:
+
+- The scroll-into-view auto-play previously only played the Sluice success path, so a visitor who didn't click "Replay: Naive Route" never saw the actual before/after story -- the core value proposition (payment blocked, Sluice fixes it, payment succeeds) was split across two buttons most visitors wouldn't discover.
+- Auto-play now runs both beats as one sequence with no click required: naive route fails first (red, "No Route"), a short pause, then transitions into the Sluice path ending in success (cyan, "Paid"). The two buttons still work independently afterward for anyone who wants to re-inspect a single path.
+- Verified with the same headless-Chromium screenshot method: captured the blocked phase and the paid phase from a single scroll-into-view trigger, zero console errors.
+- No live execute was run.

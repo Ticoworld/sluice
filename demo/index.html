@@ -877,15 +877,17 @@ const retry = await retryMerchantPayment();
     btnNaive.addEventListener("click", replayNaive);
     btnSluice.addEventListener("click", replaySluice);
 
-    // Auto-play the recorded success path once, the first time the
-    // Proof Replay section is actually visible, so it's never a static
-    // idle diagram when a visitor reaches it. Buttons still replay
-    // either path on demand afterward.
+    // Auto-play the full before/after story once, the first time the
+    // Proof Replay section is actually visible: naive route fails, then
+    // transitions into the Sluice path ending in success. No click
+    // required. Buttons still replay either path individually on demand.
     let autoPlayed = false;
     async function autoPlayOnceVisible() {
       if (autoPlayed) return;
       autoPlayed = true;
       await loadData();
+      await replayNaive();
+      await delay(1000);
       await replaySluice();
     }
 
