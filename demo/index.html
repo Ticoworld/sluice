@@ -139,6 +139,16 @@
     .pg-pane.code { border-right: 1px solid var(--line); }
     @media (max-width: 860px) { .pg-pane.code { border-right: none; border-bottom: 1px solid var(--line); } }
     .pg-pane-label { font-family: monospace; font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; }
+    .pg-live-controls { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; font-family: monospace; font-size: 0.78rem; color: var(--muted); }
+    .pg-live-controls input {
+      background: #050506; border: 1px solid var(--panel-border); color: var(--accent);
+      font-family: monospace; font-size: 0.85rem; padding: 5px 10px; border-radius: 6px; width: 100px;
+    }
+    .pg-live-controls input:focus { outline: none; border-color: var(--accent); }
+    .live-dot {
+      display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--success);
+      margin-left: 7px; vertical-align: middle; animation: pulse-success 1.6s ease-in-out infinite;
+    }
     .pg-pane pre { margin: 0; font-size: 0.83rem; line-height: 1.6; color: #e4e4e7; white-space: pre-wrap; word-break: break-word; }
     .tok-keyword { color: #c084fc; }
     .tok-string { color: #86efac; }
@@ -284,7 +294,7 @@
       <div class="section-head">
         <div class="eyebrow">SDK Playground</div>
         <h2>Integration &amp; SDK</h2>
-        <p>Explore the SDK, CLI, and HTTP integrations. Output reflects the recorded 1 CKB proof below.</p>
+        <p>SDK output is computed live in your browser. Other tabs show the recorded 1 CKB proof below.</p>
       </div>
 
       <div class="playground">
@@ -298,10 +308,14 @@
         <div class="playground-grid">
           <div class="pg-pane code">
             <div class="pg-pane-label">Code</div>
+            <div id="pg-live-controls" class="pg-live-controls" style="display: none;">
+              <label for="pg-amount-input">amountCkb</label>
+              <input id="pg-amount-input" type="text" value="1" inputmode="decimal" autocomplete="off" spellcheck="false" />
+            </div>
             <pre id="pg-code"></pre>
           </div>
           <div class="pg-pane">
-            <div class="pg-pane-label">Deterministic output</div>
+            <div class="pg-pane-label" id="pg-output-label">Deterministic output</div>
             <div id="pg-output"></div>
             <div class="pg-note" id="pg-note"></div>
           </div>
@@ -542,21 +556,16 @@
     // ---- Playground tab content (static, deterministic — no interpreter) ----
     const pgTabs = {
       sdk: {
-        code: `import { Sluice } from "@ticoworld/sluice";
+        live: true,
+        codeTemplate: (amount) => `import { Sluice } from "@ticoworld/sluice";
 
 const sluice = new Sluice({
   serviceRpcUrl: "http://127.0.0.1:8347",
   receiverRpcUrl: "http://127.0.0.1:8357",
 });
 
-const quote = sluice.quote({ amountCkb: "1" });`,
-        output: [
-          ["Target Payment", "1 CKB"],
-          ["Receiver Reserve", "99 CKB"],
-          ["Opener Funding", "120 CKB"],
-          ["Usable Liquidity", "~21 CKB"],
-        ],
-        note: "src/sdk/sluice.ts",
+const quote = sluice.quote({ amountCkb: "${amount}" });`,
+        note: "src/core/quote.ts + src/core/reserve.ts (computed live in your browser)",
       },
       cli: {
         code: `npx tsx src/index.ts quote --amount-ckb 1
@@ -663,15 +672,105 @@ const retry = await retryMerchantPayment();
       });
     }
 
+    // Client-side port of src/core/reserve.ts and src/core/quote.ts.
+    // Pure math, no RPC, no I/O -- verbatim constants and formulas from
+    // the real source, so the SDK tab's output is genuinely computed
+    // in the browser, not replayed or pre-canned. Keep this in sync
+    // with those two files if the reserve/fee logic ever changes.
+    const QUOTE_SHANNONS_PER_CKB = 100_000_000n;
+    const QUOTE_DEFAULT_ACCEPT_SIDE_RESERVE_SHANNONS = 9_900_000_000n;
+    const QUOTE_MINIMUM_FEE_HEADROOM_SHANNONS = 20n * QUOTE_SHANNONS_PER_CKB;
+
+    function quoteCkbToShannons(amount) {
+      const trimmed = amount.trim();
+      if (trimmed.length === 0) throw new Error("CKB amount is required");
+      if (trimmed.startsWith("-")) throw new Error("CKB amount must be greater than zero");
+      const parts = trimmed.split(".");
+      if (parts.length > 2) throw new Error(`Invalid CKB amount: ${amount}`);
+      const [wholePart, fractionalPart = ""] = parts;
+      if (!/^\d+$/.test(wholePart) || !/^\d*$/.test(fractionalPart)) {
+        throw new Error(`Invalid CKB amount: ${amount}`);
+      }
+      if (fractionalPart.length > 8) throw new Error("CKB amount cannot have more than 8 decimal places");
+      const whole = BigInt(wholePart);
+      const fractional = BigInt(fractionalPart.padEnd(8, "0") || "0");
+      return whole * QUOTE_SHANNONS_PER_CKB + fractional;
+    }
+
+    function quoteShannonsToCkbString(shannons) {
+      if (shannons < 0n) throw new Error("Shannon amount must not be negative");
+      const whole = shannons / QUOTE_SHANNONS_PER_CKB;
+      const fractional = shannons % QUOTE_SHANNONS_PER_CKB;
+      if (fractional === 0n) return whole.toString();
+      return `${whole.toString()}.${fractional.toString().padStart(8, "0").replace(/0+$/, "")}`;
+    }
+
+    function quoteFormatCkb(shannons) {
+      return `${quoteShannonsToCkbString(shannons)} CKB`;
+    }
+
+    function quoteCeilDiv(numerator, denominator) {
+      return (numerator + denominator - 1n) / denominator;
+    }
+
+    function quoteCalculateFeeHeadroom(targetPaymentShannons) {
+      const proportional = quoteCeilDiv(targetPaymentShannons, 10n);
+      return proportional > QUOTE_MINIMUM_FEE_HEADROOM_SHANNONS ? proportional : QUOTE_MINIMUM_FEE_HEADROOM_SHANNONS;
+    }
+
+    function buildReserveAwareQuoteLive(amountCkb) {
+      const targetPaymentShannons = quoteCkbToShannons(amountCkb);
+      if (targetPaymentShannons <= 0n) throw new Error("Target payment amount must be greater than zero");
+      const receiverReserveShannons = QUOTE_DEFAULT_ACCEPT_SIDE_RESERVE_SHANNONS;
+      const feeHeadroomShannons = quoteCalculateFeeHeadroom(targetPaymentShannons);
+      const minimumOpenerFundingShannons = receiverReserveShannons + targetPaymentShannons + feeHeadroomShannons;
+      const usableLiquidityShannons = minimumOpenerFundingShannons - receiverReserveShannons;
+      return [
+        ["Target Payment", quoteFormatCkb(targetPaymentShannons)],
+        ["Receiver Reserve", quoteFormatCkb(receiverReserveShannons)],
+        ["Fee Headroom", quoteFormatCkb(feeHeadroomShannons)],
+        ["Opener Funding", quoteFormatCkb(minimumOpenerFundingShannons)],
+        ["Usable Liquidity", quoteFormatCkb(usableLiquidityShannons)],
+      ];
+    }
+
+    function renderLiveSdkTab() {
+      const amountInput = document.getElementById("pg-amount-input");
+      const amount = amountInput.value;
+      document.getElementById("pg-code").innerHTML = highlightCode(pgTabs.sdk.codeTemplate(amount || ""));
+      const output = document.getElementById("pg-output");
+      try {
+        const rows = buildReserveAwareQuoteLive(amount);
+        output.innerHTML = rows
+          .map(([k, v]) => `<div class="pg-output-line"><span class="k">${k}</span><span class="v">${v}</span></div>`)
+          .join("");
+      } catch (error) {
+        output.innerHTML = `<div class="pg-output-line"><span class="k">Error</span><span class="v" style="color: var(--danger)">${error.message}</span></div>`;
+      }
+    }
+
     function renderPgTab(key) {
       const tab = pgTabs[key];
-      document.getElementById("pg-code").innerHTML = highlightCode(tab.code);
-      const output = document.getElementById("pg-output");
-      output.innerHTML = tab.output
-        .map(([k, v]) => `<div class="pg-output-line"><span class="k">${k}</span><span class="v">${v}</span></div>`)
-        .join("");
+      const liveControls = document.getElementById("pg-live-controls");
+      const outputLabel = document.getElementById("pg-output-label");
+
+      if (tab.live) {
+        liveControls.style.display = "flex";
+        outputLabel.innerHTML = "Live output<span class=\"live-dot\"></span>";
+        renderLiveSdkTab();
+      } else {
+        liveControls.style.display = "none";
+        outputLabel.textContent = "Deterministic output";
+        document.getElementById("pg-code").innerHTML = highlightCode(tab.code);
+        const output = document.getElementById("pg-output");
+        output.innerHTML = tab.output
+          .map(([k, v]) => `<div class="pg-output-line"><span class="k">${k}</span><span class="v">${v}</span></div>`)
+          .join("");
+      }
       document.getElementById("pg-note").textContent = "src: " + tab.note;
     }
+
+    document.getElementById("pg-amount-input").addEventListener("input", renderLiveSdkTab);
 
     document.querySelectorAll(".tab-btn").forEach((btn) => {
       btn.addEventListener("click", () => {

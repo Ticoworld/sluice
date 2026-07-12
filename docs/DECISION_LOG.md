@@ -457,3 +457,15 @@ Decision:
 - Separately: two AI-generated audit passes recommended cutting the proof-replay honesty banner's explicit non-execution disclosure and the docs/REAL_VS_SIMULATED.md link, citing "defensive" tone. Rejected both times -- the hackathon's own rules (docs/SOURCES.md) require submissions to state what is real/mocked/simulated/out-of-scope, and this exact disclosure going stale was the highest-priority fix of the whole session on 2026-07-11. The banner stays as-is.
 - Verified with the same headless-Chromium screenshot method, zero console errors.
 - No live execute was run.
+
+## 2026-07-12 demo/index.html: genuinely live SDK playground
+
+Decision:
+
+- The SDK playground was a static tabbed viewer: fixed code, fixed output, no actual computation. Called out directly as not being "a real playground."
+- `src/core/quote.ts` and `src/core/reserve.ts` (the reserve-aware quote math: 99 CKB reserve, proportional fee headroom with a 20 CKB floor, opener funding) are pure functions with no RPC or I/O, so they're safely portable to the browser without touching the "no live Fiber execution" constraint that's held all session.
+- Ported `ckbToShannons`, `shannonsToCkbString`, `calculateFeeHeadroom`, and `buildReserveAwareQuote` verbatim into the demo page's inline script. The SDK tab now has an editable `amountCkb` input; typing a new value recomputes the quote live in the browser using the real formula, and the displayed code snippet updates to show the actual input used.
+- Verified the port is faithful, not just plausible: wrote a comparison script (`compare-quote.mjs`) that imports the real `src/core/quote.ts`/`src/core/reserve.ts` via tsx and diffs their output against the ported browser functions across 7 valid amounts and 5 error cases (zero, negative, non-numeric, too many decimals, empty string). All 12 cases matched exactly, including error message text.
+- Verified live in the browser via headless Chromium: typing different amounts updates the output correctly (250 CKB -> 25 CKB fee headroom, 374 CKB opener funding; 0.5 CKB -> 20 CKB floor, 119.5 CKB opener funding), invalid input ("abc") surfaces the real SDK error message, and the live state persists correctly across tab switches. Zero console errors.
+- The CLI/HTTP/wallet-backend/merchant-backend tabs stay static and illustrative -- they require real Fiber RPC calls, which stays out of scope for the browser per every constraint held this session.
+- No live execute was run.
