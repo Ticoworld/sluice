@@ -232,15 +232,6 @@
     .surface-card a.card-link { font-size: 0.8rem; font-family: monospace; }
 
     /* Real vs replay */
-    .rvr-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-    @media (max-width: 860px) { .rvr-grid { grid-template-columns: 1fr; } }
-    .rvr-col { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px; padding: 22px; }
-    .rvr-col h3 { margin: 0 0 14px; font-size: 0.95rem; display: flex; align-items: center; gap: 8px; }
-    .rvr-col.real h3 { color: var(--success); }
-    .rvr-col.replay h3 { color: var(--warn); }
-    .rvr-col.oos h3 { color: var(--muted); }
-    .rvr-col ul { margin: 0; padding-left: 18px; color: var(--muted); font-size: 0.85rem; line-height: 1.9; }
-    .rvr-source { margin-top: 30px; font-size: 0.82rem; color: var(--muted); text-align: center; }
 
     /* Footer links */
     footer { padding: 48px 0 64px; }
@@ -262,7 +253,6 @@
         <a href="#playground">Playground</a>
         <a href="#proof-replay">Proof Replay</a>
         <a href="#builder-surfaces">Surfaces</a>
-        <a href="#real-vs-replay">Real vs Replay</a>
         <a class="btn-ghost" href="https://github.com/Ticoworld/sluice" target="_blank" rel="noopener">GitHub</a>
         <a class="btn-ghost" href="https://www.npmjs.com/package/@ticoworld/sluice" target="_blank" rel="noopener">npm</a>
       </nav>
@@ -498,41 +488,6 @@
     </div>
   </section>
 
-  <section class="alt" id="real-vs-replay">
-    <div class="wrap">
-      <div class="section-head">
-        <div class="eyebrow">Architecture &amp; Scope</div>
-        <h2>Real vs. replay vs. out of scope</h2>
-      </div>
-      <div class="rvr-grid">
-        <div class="rvr-col real">
-          <h3>Real</h3>
-          <ul>
-            <li>Local Fiber proof (node13 &rarr; node14)</li>
-            <li>npm package install (<code class="mono">@ticoworld/sluice</code>)</li>
-            <li>SDK / HTTP / CLI surfaces</li>
-          </ul>
-        </div>
-        <div class="rvr-col replay">
-          <h3>Replay</h3>
-          <ul>
-            <li>This hosted browser proof visualization</li>
-          </ul>
-        </div>
-        <div class="rvr-col oos">
-          <h3>Out of scope</h3>
-          <ul>
-            <li>Production LSP</li>
-            <li>Hosted live Fiber service</li>
-            <li>Custody</li>
-            <li>Wallet UI</li>
-            <li>Merchant UI</li>
-          </ul>
-        </div>
-      </div>
-      <p class="rvr-source">Full detail: <a href="../docs/REAL_VS_SIMULATED.md">docs/REAL_VS_SIMULATED.md</a></p>
-    </div>
-  </section>
 
   <footer>
     <div class="wrap">

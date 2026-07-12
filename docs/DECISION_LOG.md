@@ -489,3 +489,12 @@ Decision:
 - Updated `docs/SUBMISSION.md`: hosted demo link filled in, publication status updated. Video link remains the only outstanding submission item.
 - While fixing this entry's ordering, found and corrected a mistake in this log itself: the headline-correction and GitHub Pages entries had been inserted before the SDK-playground entry, even though the playground was committed first (`15e5130` before `56fdade`). Reordered so the log matches actual commit chronology -- the log's value depends on being trustworthy, the same reasoning behind the 2026-07-11 REAL_VS_SIMULATED.md fix.
 - No live execute was run.
+
+## 2026-07-12 removed the redundant "Real vs Replay" section
+
+Decision:
+
+- The dedicated "Real vs. replay vs. out of scope" section duplicated the Proof Replay honesty banner: both stated the page is a replay, both linked to `docs/REAL_VS_SIMULATED.md`. The hackathon's disclosure rule is satisfied by the banner alone; the dedicated section added a second copy of the same signal rather than new compliance value.
+- Removed the section, its CSS (`.rvr-*` classes), and the now-dead "Real vs Replay" nav link. The one piece of information unique to that section (the out-of-scope list: production LSP, custody, wallet UI, merchant UI) remains one click away via the honesty banner's `docs/REAL_VS_SIMULATED.md` link, which was already the canonical source for it.
+- Verified with the same headless-Chromium screenshot method: Builder Surfaces now flows directly into the footer with no gap, nav no longer has a dead link, zero console errors.
+- No live execute was run.
