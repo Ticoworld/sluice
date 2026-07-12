@@ -458,15 +458,6 @@ Decision:
 - Verified with the same headless-Chromium screenshot method, zero console errors.
 - No live execute was run.
 
-## 2026-07-12 hero headline correction: "undocumented" -> "observed"
-
-Decision:
-
-- The hero headline claimed the 99 CKB reserve floor was "undocumented," which implies checking Fiber's official docs and confirming the gap. Neither `docs/FIBER_RESERVE_FINDING.md` nor `docs/SOURCES.md` makes that claim -- they only state the reserve floor was observed through local testing ("The observed accept-side reserve floor was 99 CKB").
-- Changed the headline word from "undocumented" to "observed," matching the exact language already used in `docs/FIBER_RESERVE_FINDING.md`. The underlying number (99 CKB) was already verified true; this fix is about not asserting a broader claim (official docs are silent on it) than the evidence supports.
-- Re-confirmed via `npm dist-tag rm @ticoworld/sluice latest`: previously failed with 400 Bad Request while authenticated (documented in the 2026-07-12 npm alpha publish entry); retried after the publish token was revoked and got 401 Unauthorized instead, which is expected and doesn't change the original finding.
-- No live execute was run.
-
 ## 2026-07-12 demo/index.html: genuinely live SDK playground
 
 Decision:
@@ -477,4 +468,24 @@ Decision:
 - Verified the port is faithful, not just plausible: wrote a comparison script (`compare-quote.mjs`) that imports the real `src/core/quote.ts`/`src/core/reserve.ts` via tsx and diffs their output against the ported browser functions across 7 valid amounts and 5 error cases (zero, negative, non-numeric, too many decimals, empty string). All 12 cases matched exactly, including error message text.
 - Verified live in the browser via headless Chromium: typing different amounts updates the output correctly (250 CKB -> 25 CKB fee headroom, 374 CKB opener funding; 0.5 CKB -> 20 CKB floor, 119.5 CKB opener funding), invalid input ("abc") surfaces the real SDK error message, and the live state persists correctly across tab switches. Zero console errors.
 - The CLI/HTTP/wallet-backend/merchant-backend tabs stay static and illustrative -- they require real Fiber RPC calls, which stays out of scope for the browser per every constraint held this session.
+- No live execute was run.
+
+## 2026-07-12 hero headline correction: "undocumented" -> "observed"
+
+Decision:
+
+- The hero headline claimed the 99 CKB reserve floor was "undocumented," which implies checking Fiber's official docs and confirming the gap. Neither `docs/FIBER_RESERVE_FINDING.md` nor `docs/SOURCES.md` makes that claim -- they only state the reserve floor was observed through local testing ("The observed accept-side reserve floor was 99 CKB").
+- Changed the headline word from "undocumented" to "observed," matching the exact language already used in `docs/FIBER_RESERVE_FINDING.md`. The underlying number (99 CKB) was already verified true; this fix is about not asserting a broader claim (official docs are silent on it) than the evidence supports.
+- Re-confirmed via `npm dist-tag rm @ticoworld/sluice latest`: previously failed with 400 Bad Request while authenticated (documented in the npm alpha publish entry above); retried after the publish token was revoked and got 401 Unauthorized instead, which is expected and doesn't change the original finding.
+- No live execute was run.
+
+## 2026-07-12 GitHub Pages enabled, hosted demo link live
+
+Decision:
+
+- Maintainer enabled GitHub Pages (Settings -> Pages -> Deploy from branch -> master -> / (root)).
+- Verified the deployment directly rather than trusting the settings-saved confirmation alone: first check returned 404 (deploy still propagating), re-checked shortly after and got 200, then fetched the page content and confirmed the `<title>` tag matches the actual Sluice demo page, not a default/placeholder GitHub Pages page.
+- Live hosted demo URL: https://ticoworld.github.io/sluice/demo/index.html
+- Updated `docs/SUBMISSION.md`: hosted demo link filled in, publication status updated. Video link remains the only outstanding submission item.
+- While fixing this entry's ordering, found and corrected a mistake in this log itself: the headline-correction and GitHub Pages entries had been inserted before the SDK-playground entry, even though the playground was committed first (`15e5130` before `56fdade`). Reordered so the log matches actual commit chronology -- the log's value depends on being trustworthy, the same reasoning behind the 2026-07-11 REAL_VS_SIMULATED.md fix.
 - No live execute was run.
