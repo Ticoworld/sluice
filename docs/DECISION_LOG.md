@@ -516,3 +516,13 @@ Decision:
 - Clarified the actual video workflow: visuals get recorded first with no narration, then voiceover is read from this file during the edit pass -- not read live during recording. Restored narration text to `docs/VIDEO_SCRIPT.md`, paired per-shot with what's on screen, rather than leaving it as shot descriptions only.
 - Confirmed VIDEO_SCRIPT.md is not a judged deliverable -- it's a production aid, not something a judge needs to open. Noted this explicitly in the file so it's not mistaken for a submission artifact later.
 - No live execute was run.
+
+## 2026-07-12 fixed doc links on the hosted demo to render properly
+
+Decision:
+
+- Question raised: does the project need a dedicated hosted docs site. Checked what actually happens when the 12 doc/example links on the live hosted demo page are clicked: they resolved (200), but GitHub Pages serves `.md`/`.yaml`/`.ts` files as raw `text/markdown` (or equivalent), not rendered HTML -- clicking any doc link from the polished demo page landed on unstyled plain text with visible `#` symbols.
+- No new docs site needed -- GitHub's own repo viewer already renders markdown and syntax-highlights code well. The actual bug was the demo page linking to the raw Pages-served file instead of the GitHub blob view.
+- Changed all 12 affected links (`docs/SDK.md`, `docs/DEMO.md` x2, `docs/HTTP_API.md` x2, `docs/openapi.yaml`, `docs/DEPLOYMENT.md`, `docs/REAL_VS_SIMULATED.md`, both example `.ts` files, `README.md`) from relative paths to `https://github.com/Ticoworld/sluice/blob/master/...` absolute URLs, opening in a new tab.
+- Verified each new URL actually resolves as `text/html` (200) via curl before shipping, not just assumed GitHub blob view would work.
+- No live execute was run.
