@@ -458,6 +458,15 @@ Decision:
 - Verified with the same headless-Chromium screenshot method, zero console errors.
 - No live execute was run.
 
+## 2026-07-12 hero headline correction: "undocumented" -> "observed"
+
+Decision:
+
+- The hero headline claimed the 99 CKB reserve floor was "undocumented," which implies checking Fiber's official docs and confirming the gap. Neither `docs/FIBER_RESERVE_FINDING.md` nor `docs/SOURCES.md` makes that claim -- they only state the reserve floor was observed through local testing ("The observed accept-side reserve floor was 99 CKB").
+- Changed the headline word from "undocumented" to "observed," matching the exact language already used in `docs/FIBER_RESERVE_FINDING.md`. The underlying number (99 CKB) was already verified true; this fix is about not asserting a broader claim (official docs are silent on it) than the evidence supports.
+- Re-confirmed via `npm dist-tag rm @ticoworld/sluice latest`: previously failed with 400 Bad Request while authenticated (documented in the 2026-07-12 npm alpha publish entry); retried after the publish token was revoked and got 401 Unauthorized instead, which is expected and doesn't change the original finding.
+- No live execute was run.
+
 ## 2026-07-12 demo/index.html: genuinely live SDK playground
 
 Decision:
