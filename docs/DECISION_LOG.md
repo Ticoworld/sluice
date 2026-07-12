@@ -507,3 +507,12 @@ Decision:
 - `docs/VIDEO_SCRIPT.md` was a word-for-word narration script, written before the npm publish and demo redesign, and no longer matches the plan (visuals recorded first, voiceover added naturally in edit rather than read from a script). Rewrote it as a shot list: what to show on screen and why each shot matters, no narration text.
 - Updated the one stale reference to it in README.md ("90-second demo narration script" -> "visual shot list for the ~90-second demo video").
 - No live execute was run.
+
+## 2026-07-12 removed internal-process-only docs, restored video narration
+
+Decision:
+
+- Deleted `docs/AI_OPERATOR_RULES.md`, `docs/WIN_GATES.md`, and `docs/SPIKE.md` -- internal working rules, phase-gate checklist, and spike planning notes from the build process. None serve a builder or judge reading the repo; all three internal purposes are already satisfied elsewhere (DECISION_LOG.md and SPIKE_LOG.md carry the actual evidentiary record). Removed the now-dead links to them from README.md's repo map.
+- Clarified the actual video workflow: visuals get recorded first with no narration, then voiceover is read from this file during the edit pass -- not read live during recording. Restored narration text to `docs/VIDEO_SCRIPT.md`, paired per-shot with what's on screen, rather than leaving it as shot descriptions only.
+- Confirmed VIDEO_SCRIPT.md is not a judged deliverable -- it's a production aid, not something a judge needs to open. Noted this explicitly in the file so it's not mistaken for a submission artifact later.
+- No live execute was run.
