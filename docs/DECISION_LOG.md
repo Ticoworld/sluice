@@ -419,3 +419,13 @@ Decision:
 - Footer link grid cut from 9 links (reading as a doc sitemap) down to 5 essentials: GitHub repo, npm package, README, docs/SDK.md, docs/HTTP_API.md. The dropped links (openapi.yaml, DEMO.md, SUBMISSION.md, REAL_VS_SIMULATED.md) all remain reachable from within the page itself (builder-surface cards, honesty banner, real-vs-replay section) or from the GitHub repo root.
 - Verified with the same headless-Chromium screenshot method: full-viewport hero confirmed, trimmed sections confirmed rendering correctly, zero console errors.
 - No live execute was run.
+
+## 2026-07-12 demo/index.html syntax highlighting and hero sizing
+
+Decision:
+
+- The SDK playground's code pane previously rendered every snippet in a single flat color. Added a small dependency-free tokenizer (`highlightCode()` in the inline script) that colors keywords, strings, numbers, function calls, capitalized type names, comments, and CLI-style flags -- no external highlighting library, so the page stays self-contained with zero added dependencies.
+- The tokenizer only needs to handle the five static snippets already defined in `pgTabs`, not arbitrary code, so a single-pass regex with a replacer function is sufficient and safe (HTML-escapes first, then tokenizes, avoiding double-escaping or injection from the static strings).
+- Increased hero heading, sub-headline, install-block, and button sizing now that the hero is full-viewport, so the larger space doesn't read as empty.
+- Verified with the same headless-Chromium screenshot method across the SDK, CLI, and wallet-backend tabs: syntax highlighting renders correctly, zero console errors.
+- No live execute was run.

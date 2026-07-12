@@ -82,31 +82,31 @@
       border-bottom: 1px solid var(--panel-border);
     }
     h1.hero-title {
-      font-size: clamp(1.9rem, 3.6vw, 2.9rem); line-height: 1.15; font-weight: 800; margin: 0 0 18px;
-      max-width: 820px;
+      font-size: clamp(2.4rem, 4.6vw, 3.75rem); line-height: 1.12; font-weight: 800; margin: 0 0 22px;
+      max-width: 900px;
     }
     h1.hero-title .hl { color: var(--accent); }
-    p.hero-sub { font-size: 1.15rem; color: var(--muted); max-width: 640px; margin: 0 0 32px; }
+    p.hero-sub { font-size: 1.35rem; color: var(--muted); max-width: 680px; margin: 0 0 40px; }
 
     .install-block {
-      display: flex; align-items: center; gap: 12px; max-width: 560px;
+      display: flex; align-items: center; gap: 14px; max-width: 620px;
       background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
-      padding: 14px 18px; margin-bottom: 24px;
+      padding: 18px 22px; margin-bottom: 28px;
     }
     .install-block .prompt { color: var(--muted); }
-    .install-block code { color: var(--text); font-size: 0.95rem; flex: 1; }
+    .install-block code { color: var(--text); font-size: 1.1rem; flex: 1; }
     .copy-btn {
       background: transparent; border: 1px solid var(--panel-border); color: var(--muted);
-      border-radius: 6px; padding: 6px 10px; font-size: 0.75rem; cursor: pointer; font-family: inherit;
+      border-radius: 6px; padding: 7px 12px; font-size: 0.8rem; cursor: pointer; font-family: inherit;
       transition: all 0.15s;
     }
     .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
     .copy-btn.copied { border-color: var(--success); color: var(--success); }
 
-    .hero-ctas { display: flex; flex-wrap: wrap; gap: 12px; }
+    .hero-ctas { display: flex; flex-wrap: wrap; gap: 14px; }
     .btn {
-      display: inline-flex; align-items: center; gap: 8px; padding: 11px 18px; border-radius: 8px;
-      font-size: 0.9rem; font-weight: 600; cursor: pointer; border: 1px solid transparent;
+      display: inline-flex; align-items: center; gap: 8px; padding: 13px 22px; border-radius: 8px;
+      font-size: 1rem; font-weight: 600; cursor: pointer; border: 1px solid transparent;
     }
     .btn-primary { background: var(--accent); color: #001014; }
     .btn-primary:hover { background: #67e8f9; text-decoration: none; }
@@ -139,7 +139,14 @@
     .pg-pane.code { border-right: 1px solid var(--line); }
     @media (max-width: 860px) { .pg-pane.code { border-right: none; border-bottom: 1px solid var(--line); } }
     .pg-pane-label { font-family: monospace; font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; }
-    .pg-pane pre { margin: 0; font-size: 0.83rem; line-height: 1.6; color: #a5b4fc; white-space: pre-wrap; word-break: break-word; }
+    .pg-pane pre { margin: 0; font-size: 0.83rem; line-height: 1.6; color: #e4e4e7; white-space: pre-wrap; word-break: break-word; }
+    .tok-keyword { color: #c084fc; }
+    .tok-string { color: #86efac; }
+    .tok-number { color: #fca5a5; }
+    .tok-func { color: #7dd3fc; }
+    .tok-type { color: #fbbf24; }
+    .tok-comment { color: #71717a; font-style: italic; }
+    .tok-flag { color: #fdba74; }
     .pg-output-line { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--line); font-family: monospace; font-size: 0.85rem; }
     .pg-output-line:last-child { border-bottom: none; }
     .pg-output-line .k { color: var(--muted); }
@@ -624,9 +631,43 @@ const retry = await retryMerchantPayment();
       },
     };
 
+    // Lightweight, dependency-free syntax highlighter for the static
+    // snippets above. Not a general-purpose tokenizer — just enough to
+    // color keywords/strings/functions/comments/flags so the code pane
+    // doesn't read as flat monochrome text.
+    const HL_KEYWORDS = new Set([
+      "import", "from", "export", "const", "let", "var", "new", "await",
+      "async", "function", "return", "if", "else", "for", "while", "true",
+      "false", "null", "undefined", "typeof", "interface", "type",
+      "extends", "class", "this", "void", "in", "of", "curl",
+    ]);
+
+    function highlightCode(code) {
+      const escaped = code
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+
+      const pattern = /(\/\/.*$)|("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`)|(--?[A-Za-z][\w-]*)|(\b\d+(?:\.\d+)?\b)|(\b[A-Za-z_$][\w$]*\b(?=\s*\())|(\b[A-Za-z_$][\w$]*\b)/gm;
+
+      return escaped.replace(pattern, (match, comment, string, flag, number, funcCall, word) => {
+        if (comment) return `<span class="tok-comment">${comment}</span>`;
+        if (string) return `<span class="tok-string">${string}</span>`;
+        if (flag) return `<span class="tok-flag">${flag}</span>`;
+        if (number) return `<span class="tok-number">${number}</span>`;
+        if (funcCall) return `<span class="tok-func">${funcCall}</span>`;
+        if (word) {
+          if (HL_KEYWORDS.has(word)) return `<span class="tok-keyword">${word}</span>`;
+          if (/^[A-Z]/.test(word)) return `<span class="tok-type">${word}</span>`;
+          return word;
+        }
+        return match;
+      });
+    }
+
     function renderPgTab(key) {
       const tab = pgTabs[key];
-      document.getElementById("pg-code").textContent = tab.code;
+      document.getElementById("pg-code").innerHTML = highlightCode(tab.code);
       const output = document.getElementById("pg-output");
       output.innerHTML = tab.output
         .map(([k, v]) => `<div class="pg-output-line"><span class="k">${k}</span><span class="v">${v}</span></div>`)
