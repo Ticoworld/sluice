@@ -874,29 +874,59 @@ const retry = await retryMerchantPayment();
       isExecuting = false;
     }
 
-    btnNaive.addEventListener("click", replayNaive);
-    btnSluice.addEventListener("click", replaySluice);
-
-    // Auto-play the full before/after story once, the first time the
-    // Proof Replay section is actually visible: naive route fails, then
-    // transitions into the Sluice path ending in success. No click
-    // required. Buttons still replay either path individually on demand.
-    let autoPlayed = false;
-    async function autoPlayOnceVisible() {
-      if (autoPlayed) return;
-      autoPlayed = true;
-      await loadData();
-      await replayNaive();
-      await delay(1000);
-      await replaySluice();
+    // All replays (loop-driven or click-driven) funnel through this
+    // chain so a click during an in-flight animation queues after it
+    // instead of being silently dropped by the isExecuting guard.
+    let animationChain = Promise.resolve();
+    function enqueue(fn) {
+      animationChain = animationChain.then(fn, fn);
+      return animationChain;
     }
+
+    // Auto-loop the full before/after story: naive route fails, pause,
+    // transitions into the Sluice path ending in success, pause, repeat.
+    // Starts the first time the Proof Replay section is visible, no
+    // click required. Stops permanently the moment someone manually
+    // clicks a button, so it never fights with manual control.
+    let loopActive = false;
+    let userTookControl = false;
+
+    async function runAutoPlayLoop() {
+      if (loopActive || userTookControl) return;
+      loopActive = true;
+      await loadData();
+      while (loopActive && !userTookControl) {
+        await enqueue(replayNaive);
+        if (userTookControl) break;
+        await delay(1000);
+        if (userTookControl) break;
+        await enqueue(replaySluice);
+        if (userTookControl) break;
+        await delay(2600);
+      }
+      loopActive = false;
+    }
+
+    function stopAutoPlayLoop() {
+      userTookControl = true;
+      loopActive = false;
+    }
+
+    btnNaive.addEventListener("click", () => {
+      stopAutoPlayLoop();
+      enqueue(replayNaive);
+    });
+    btnSluice.addEventListener("click", () => {
+      stopAutoPlayLoop();
+      enqueue(replaySluice);
+    });
 
     const replaySection = document.getElementById("proof-replay");
     if ("IntersectionObserver" in window) {
       const observer = new IntersectionObserver(
         (entries) => {
           if (entries.some((entry) => entry.isIntersecting)) {
-            autoPlayOnceVisible();
+            runAutoPlayLoop();
             observer.disconnect();
           }
         },
