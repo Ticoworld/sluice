@@ -526,3 +526,23 @@ Decision:
 - Changed all 12 affected links (`docs/SDK.md`, `docs/DEMO.md` x2, `docs/HTTP_API.md` x2, `docs/openapi.yaml`, `docs/DEPLOYMENT.md`, `docs/REAL_VS_SIMULATED.md`, both example `.ts` files, `README.md`) from relative paths to `https://github.com/Ticoworld/sluice/blob/master/...` absolute URLs, opening in a new tab.
 - Verified each new URL actually resolves as `text/html` (200) via curl before shipping, not just assumed GitHub blob view would work.
 - No live execute was run.
+
+## 2026-07-12 general repo audit (requested after repeated reactive bug-finding)
+
+Decision:
+
+Ran a systematic audit instead of waiting for the next question to surface the next gap: re-verified the published npm package from a clean install, confirmed CI is green on the latest commit, crawled every link on the actual live hosted demo page (not local), verified all in-page nav anchors resolve, full build/typecheck/test run, `npm audit`, OpenAPI spec validation, Dockerfile review, cross-doc fact-consistency check, and a real mobile-viewport test -- most of which had never been done this session (everything had only ever been tested at desktop width).
+
+Findings and actions:
+
+- **npm package**: re-verified via a real `npm install @ticoworld/sluice@alpha` in a clean folder, then imported and ran `.quote()` -- still correct.
+- **CI**: green on the latest commit at time of audit.
+- **Demo page links**: all resolve; a few showed transient `fetch failed` errors from rapid automated requests hitting GitHub's rate limiting, re-verified individually and confirmed genuine (not real breaks).
+- **`npm audit`**: one low-severity finding in `esbuild` via `tsup`'s dependency tree (dev-only, unused feature -- esbuild's dev server). `npm audit fix` can't resolve it without a forced `tsup` bump; left as-is and flagged rather than risk breaking the build pipeline for a low-severity, inapplicable issue.
+- **OpenAPI spec**: linting found 5 real errors, all the same rule (`security-defined`) -- the spec never declared a security scheme. Confirmed via grep that the HTTP API genuinely has no auth anywhere in code or docs (intentional -- `SUBMISSION.md` already lists "production key management" as out of scope), so added an explicit `security: []` plus a description note, converting an implicit assumption into a documented one. Also added `operationId` to all 5 endpoints and an `info.license` field, cutting 15 warnings to 9 (the rest are a linter false-positive against the intentional `oneOf`/`not` "provide exactly one of amountCkb or amountShannons" pattern).
+- **Dockerfile**: reviewed, matches the real `package.json` scripts and `serve` command, but could not actually build-test it -- Docker CLI is installed but the daemon isn't running, and starting a GUI application wasn't attempted. Flagged as unverified rather than claimed as confirmed.
+- **`demo/README.md`**: was stale, still describing the old console-only page and referencing relative doc links that were already changed to absolute GitHub URLs earlier in this session. Rewritten to match current reality.
+- **Fact consistency**: found `docs/DEMO.md`'s "Local Runnable Demo" instructions still use `node4` as the example service node, which `.env.demo.example`/`src/config.ts` also default to -- but per the 2026-07-10 entry above, `node4` was the node that "accumulated stale aborted channels" and was replaced by `node13`/`node14` for the final proof recording. Could not determine from the repo alone whether `node4` is still usable today (no way to query the maintainer's local node state), so flagged rather than guess-edited.
+- **Mobile viewport**: never tested this session (everything only verified at 1400x900 desktop). Found two real bugs on a 390px viewport: (1) the top nav had no responsive handling and forced horizontal overflow -- fixed by hiding the in-page anchor links below 640px, keeping GitHub/npm buttons visible; (2) a real regression from the earlier "100vh hero" change -- adding `display: flex` to `section.hero` turned its `.wrap` child into a flex item, and flex items default to `min-width: auto`, which refuses to shrink below content's intrinsic minimum width. This is why it never appeared at desktop width but broke completely on mobile. Fixed by adding `width: 100%; min-width: 0;` to `.wrap`. Re-verified with a DOM-level overflow diagnostic (not just visual screenshots) before and after: overflowing elements went from 5 down to 0.
+- **Orphaned directories**: found two more empty, untracked, unreferenced directories (`src/lsp`, `src/spike`) beyond the `$node8`/`fixtures/` cleanup earlier -- same category, removed.
+- No live execute was run.

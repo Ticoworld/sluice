@@ -1,28 +1,38 @@
 # Sluice Demo Folder
 
-This folder is a static, hosted-demo-ready replay of the recorded Phase 8B proof.
+This folder is the hosted Sluice landing page and demo, live at
+https://ticoworld.github.io/sluice/demo/index.html via GitHub Pages
+(serving the repo's `master` branch root).
 
 Contents:
 
-- `index.html`: static demo page
-- `proof-data.json`: recorded proof and quote data
+- `index.html`: the hosted page -- hero, SDK playground, proof replay, builder-surface cards
+- `proof-data.json`: recorded proof and quote data, loaded by `index.html` at runtime
+- `logo.png`: brand mark used in the page header
 
 ## What It Is
 
-- a replay of the recorded live local proof
-- a way to explain Sluice quickly to judges and builders
-- a static page that can be hosted anywhere
+- an install-first landing page (`npm install @ticoworld/sluice@alpha`)
+- a genuinely live SDK playground: the reserve-aware quote math is ported client-side from
+  `src/core/quote.ts` and `src/core/reserve.ts` and actually computes in the browser, not replayed
+- a recorded replay of the real before/after local Fiber proof (auto-plays on scroll, loops,
+  clearly labeled as a replay, not live)
+- builder-surface cards pointing at the SDK, CLI, HTTP API, OpenAPI spec, Docker deploy, and the
+  wallet/merchant examples
 
 ## What It Is Not
 
-- a full dashboard
-- a live Fiber executor
+- a live Fiber executor -- the proof replay is recorded data, not a live RPC call
+- a full dashboard or hosted operator UI
 - a payment app
 
-The local runbook in `docs/DEMO.md` is what performs the live execution.
+The local runbook in `docs/DEMO.md` is what performs real live execution.
 
-## Static Deploy Notes
+## Link targets
 
-- Host the repository root or mirror the `docs/` folder alongside this demo folder.
-- The demo page uses relative links back to `docs/SDK.md`, `docs/HTTP_API.md`, `docs/INTEGRATION_GUIDE.md`, and `docs/FIBER_RESERVE_FINDING.md`.
-- The replay data lives in `proof-data.json` and is loaded by `index.html` at runtime.
+`index.html`'s doc and example links point to GitHub's blob viewer
+(`github.com/Ticoworld/sluice/blob/master/...`), not relative paths. GitHub Pages serves
+`.md`/`.yaml`/`.ts` files as raw text, not rendered HTML, so relative links would land on
+unstyled plain text -- GitHub's own viewer already renders and syntax-highlights these files
+correctly, so links go there directly instead of anywhere on this repo needing to build a
+docs site.

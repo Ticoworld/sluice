@@ -2,14 +2,23 @@ openapi: 3.1.0
 info:
   title: Sluice HTTP API
   version: 1.0.0
+  license:
+    name: MIT
+    url: https://github.com/Ticoworld/sluice/blob/master/LICENSE
   description: >
     Sluice wraps the proven SDK and coordinator flows behind a small HTTP
     service for wallets, merchant backends, and local operator tooling.
+    Unauthenticated by design: this is a local, trusted-network service,
+    not a hosted production API. See docs/DEPLOYMENT.md for trust
+    boundaries and docs/SUBMISSION.md for what is out of scope, including
+    production key management.
 servers:
   - url: http://127.0.0.1:8787
+security: []
 paths:
   /health:
     get:
+      operationId: getHealth
       summary: Health check
       responses:
         "200":
@@ -24,6 +33,7 @@ paths:
                 mode: http
   /v1/quote:
     post:
+      operationId: postQuote
       summary: Calculate a reserve-aware quote
       requestBody:
         required: true
@@ -72,6 +82,7 @@ paths:
           $ref: "#/components/responses/BadRequest"
   /v1/readiness:
     post:
+      operationId: postReadiness
       summary: Check whether a receiver can be paid right now
       requestBody:
         required: true
@@ -97,6 +108,7 @@ paths:
           $ref: "#/components/responses/BadRequest"
   /v1/prepare:
     post:
+      operationId: postPrepare
       summary: Prepare reserve-aware inbound liquidity
       requestBody:
         required: true
@@ -135,6 +147,7 @@ paths:
                       message: execute=true requires yes=true
   /v1/prove-payment:
     post:
+      operationId: postProvePayment
       summary: Run the before/after payment proof
       requestBody:
         required: true
