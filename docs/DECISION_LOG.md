@@ -447,3 +447,13 @@ Decision:
 - Testing the loop surfaced a real bug: clicking a button while the loop's animation was mid-flight got silently swallowed by the `isExecuting` early-return guard inside `replayNaive`/`replaySluice`, leaving the page stuck showing whatever the loop happened to be mid-way through. Confirmed via headless-Chromium: a click during the loop's naive-fail beat left the terminal showing "Failed" instead of the clicked "Success" path.
 - Fixed by funneling every replay call -- loop-driven or click-driven -- through a single serialized promise chain (`enqueue()`), so a click during an in-flight animation queues after it instead of being dropped. Re-verified: the same click-during-animation scenario now correctly ends on "Success (recorded)" and stays there (loop does not resume).
 - No live execute was run.
+
+## 2026-07-12 demo/index.html duplicate title fix
+
+Decision:
+
+- Two independent audits (one AI-assisted, one manual) converged on the same confirmed bug: the Proof Replay section's `<h2>` and the replay shell's internal `.title` div both read "Recorded Local Proof Replay," stacked immediately on top of each other.
+- Removed the redundant inner title, leaving only the `node13 -> node14 -> Phase 8B` status pill in the shell header (right-aligned). The outer section `<h2>` still carries the heading.
+- Separately: two AI-generated audit passes recommended cutting the proof-replay honesty banner's explicit non-execution disclosure and the docs/REAL_VS_SIMULATED.md link, citing "defensive" tone. Rejected both times -- the hackathon's own rules (docs/SOURCES.md) require submissions to state what is real/mocked/simulated/out-of-scope, and this exact disclosure going stale was the highest-priority fix of the whole session on 2026-07-11. The banner stays as-is.
+- Verified with the same headless-Chromium screenshot method, zero console errors.
+- No live execute was run.

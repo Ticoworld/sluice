@@ -155,8 +155,7 @@
 
     /* Proof replay (existing engine, relabeled) */
     .replay-shell { border: 1px solid var(--panel-border); border-radius: 12px; background: var(--panel); box-shadow: var(--shadow); overflow: hidden; }
-    .replay-header { padding: 16px 24px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
-    .replay-header .title { font-weight: 700; font-size: 0.95rem; }
+    .replay-header { padding: 16px 24px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 10px; }
     .replay-status-pill { font-family: monospace; font-size: 0.72rem; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--panel-border); color: var(--muted); }
     .honesty-banner {
       margin: 0; padding: 12px 24px; background: rgba(251, 191, 36, 0.06); border-bottom: 1px solid rgba(251, 191, 36, 0.2);
@@ -321,7 +320,6 @@
 
       <div class="replay-shell">
         <div class="replay-header">
-          <div class="title">Recorded Local Proof Replay</div>
           <div class="replay-status-pill">node13 &rarr; node14 &middot; Phase 8B</div>
         </div>
         <p class="honesty-banner">
