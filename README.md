@@ -78,7 +78,7 @@ This runs the same before/after payment proof described in [docs/REAL_VS_SIMULAT
 - [docs/SUBMISSION.md](docs/SUBMISSION.md): judge-facing submission summary and placeholders.
 - [docs/TECHNICAL_BREAKDOWN.md](docs/TECHNICAL_BREAKDOWN.md): architecture and component breakdown.
 - [docs/ROADMAP.md](docs/ROADMAP.md): short-, medium-, and long-term roadmap.
-- [docs/VIDEO_SCRIPT.md](docs/VIDEO_SCRIPT.md): 90-second demo narration script.
+- [docs/VIDEO_SCRIPT.md](docs/VIDEO_SCRIPT.md): visual shot list for the ~90-second demo video.
 - [docs/AI_USAGE.md](docs/AI_USAGE.md): AI usage and human verification statement.
 - [demo/README.md](demo/README.md): static hosted-demo-ready folder overview.
 - [demo/index.html](demo/index.html): replay page for the recorded Phase 8B proof.

@@ -498,3 +498,12 @@ Decision:
 - Removed the section, its CSS (`.rvr-*` classes), and the now-dead "Real vs Replay" nav link. The one piece of information unique to that section (the out-of-scope list: production LSP, custody, wallet UI, merchant UI) remains one click away via the honesty banner's `docs/REAL_VS_SIMULATED.md` link, which was already the canonical source for it.
 - Verified with the same headless-Chromium screenshot method: Builder Surfaces now flows directly into the footer with no gap, nav no longer has a dead link, zero console errors.
 - No live execute was run.
+
+## 2026-07-12 repo cleanup: leftover local artifacts and a stale doc
+
+Decision:
+
+- Found and removed two empty, untracked, purposeless directories sitting in the repo root: `$node8` (leftover local Fiber node data directory, empty, dated July 4) and `fixtures/` (empty, never populated). Confirmed both were untracked by git and contained zero files before removing -- nothing lost.
+- `docs/VIDEO_SCRIPT.md` was a word-for-word narration script, written before the npm publish and demo redesign, and no longer matches the plan (visuals recorded first, voiceover added naturally in edit rather than read from a script). Rewrote it as a shot list: what to show on screen and why each shot matters, no narration text.
+- Updated the one stale reference to it in README.md ("90-second demo narration script" -> "visual shot list for the ~90-second demo video").
+- No live execute was run.

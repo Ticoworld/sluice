@@ -1,26 +1,53 @@
-# Video Script
+# Video Shot List
 
-## 0-10 seconds
+Visual sequence only. No narration text — voiceover gets added naturally
+during edit, not read from a script.
 
-"Fiber receivers can fail to receive because inbound liquidity is missing. Sluice solves that by preparing reserve-aware inbound liquidity on demand."
+## Shot 1 — The real proof (anchor shot, don't cut this short)
 
-## 10-25 seconds
+Run the real local proof (`npm run demo` with live execution enabled, or
+the recorded terminal output if re-running live isn't practical for the
+recording). Show, in order:
 
-"Sluice is a scoped Just-In-Time inbound liquidity service for Fiber Network. It gives builders a CLI, SDK, and HTTP API for the same proven flow."
+- the before-attempt failure: `Send payment error: Failed to build route, PathFind error: no path found`
+- Sluice quoting and opening the reserve-aware channel
+- `ChannelReady`
+- the payment retry succeeding: `Success`, invoice `Paid`
 
-## 25-45 seconds
+This is the technical trust anchor. Everything else in the video is
+secondary to this actually happening on screen.
 
-"Before Sluice, the payment failed with no route: `Send payment error: Failed to build route, PathFind error: no path found`."
+## Shot 2 — Install
 
-## 45-65 seconds
+Clean terminal, run `npm install @ticoworld/sluice@alpha` against the real
+registry. Let the real install output show.
 
-"Sluice quotes the reserve-aware path, opens the channel, detects the receiver pending entry, accepts the channel, and waits for `ChannelReady`."
+## Shot 3 — SDK code
 
-## 65-80 seconds
+A few real lines: `import { Sluice } from "@ticoworld/sluice"`, construct
+the client, call `.quote({ amountCkb: "1" })`. Either type it live or show
+`examples/sdk/quote.ts` in an editor.
 
-"After Sluice, the retry succeeds. The recorded proof shows `Success` on payment and `Paid` on the receiver invoice."
+## Shot 4 — Hosted playground
 
-## 80-90 seconds
+Browser open to the live GitHub Pages demo
+(https://ticoworld.github.io/sluice/demo/index.html):
 
-"Builders can use the SDK in code, the HTTP API from external systems, or the CLI for local operators. Sluice turns a Fiber receive blocker into a reusable integration primitive."
+- hero + install block
+- SDK playground tab: type a different `amountCkb` value, show the output
+  recompute live (this is the one part of the demo that's genuinely
+  interactive, not replayed — worth lingering on)
+- scroll to Proof Replay, let the before/after animation play through
 
+## Shot 5 — Breadth close
+
+Quick pan across the builder-surface cards (SDK / CLI / HTTP / OpenAPI /
+Docker / wallet example / merchant example / doctor command), or the repo
+file tree showing the same breadth.
+
+## Notes
+
+- Shot 1 is the only one that must not be shortened or skipped.
+- Shots 2-4 exist to answer "is this just a repo, or something I could
+  actually use" — that's the distribution story this session built.
+- Total target: ~90-100 seconds, matching the original pacing.
