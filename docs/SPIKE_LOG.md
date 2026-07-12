@@ -781,3 +781,22 @@ Implementation evidence:
 Verdict:
 
 - The final judge-facing live proof is complete on a fresh node pair.
+
+## 2026-07-12 demo proof honesty hardening and fresh rerun reliability audit
+
+Implementation evidence:
+
+- Updated `scripts/demo-support.ts` so demo env loading uses `quiet: true`; judge-facing demo commands no longer print dotenv marketing/tip lines ahead of Sluice output.
+- Tightened demo-proof result reporting: `After Sluice: receiver is payable` is now printed only when the full proof actually completes (`ChannelReady`, payment retry `Success`, receiver invoice `Paid`).
+- Tightened the public demo body too: failed live runs now say the proof did not complete cleanly instead of implying success.
+- Added regression tests for failed live-proof output and failed public-demo-body messaging.
+- Fresh live reruns were attempted against `node13 -> node15` and then `node14 -> node16`.
+- In those reruns, the before-payment failure, reserve-aware quote, `open_channel`, and `accept_channel` all succeeded, but the flow failed before a clean payable result.
+- Earlier receiver-side logs on `https://testnet.ckbapp.dev/` showed: `fails to verify the TxUpdate message from the peer: Failed to call CKB RPC: http error: error sending request for url (https://testnet.ckbapp.dev/)`.
+- After switching the local nodes to `https://testnet.ckb.dev/`, the freshest opener-side error on node14 was: `Failed to fund channel (attempt 1/5): Failed to call CKB RPC: http error: error decoding response body`, repeated through the retry budget before the channel ended `FUNDING_ABORTED`.
+
+Verdict:
+
+- The previously recorded successful live proof remains the authoritative judge-facing evidence.
+- Fresh reruns are environment-sensitive because channel funding depends on third-party public CKB RPC reliability.
+- The demo harness now reports failed reruns honestly instead of overstating success.

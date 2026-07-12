@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { formatDemoError, readDemoConfig, runDemoDoctor, runDemoDry, runDemoProof, runPublicDemo } from "../scripts/demo-support.js";
+import { formatDemoError, formatDemoProof, formatPublicDemoBody, readDemoConfig, runDemoDoctor, runDemoDry, runDemoProof, runPublicDemo } from "../scripts/demo-support.js";
 
 function makeEnv(overrides: Record<string, string>): NodeJS.ProcessEnv {
   return {
@@ -746,5 +746,263 @@ describe("demo harness", () => {
         execute: true,
       }),
     );
+  });
+
+  it("formats failed live proof runs without claiming the receiver became payable", () => {
+    const output = formatDemoProof({
+      mode: "execute",
+      plan: {
+        service_node: "node13",
+        receiver_node: "node15",
+        receiver_pubkey: "03receiver",
+        target_payment: { shannons: "100000000", ckb: "1 CKB" },
+        quote: {
+          target_payment: { shannons: "100000000", ckb: "1 CKB" },
+          receiver_reserve_required: { shannons: "9900000000", ckb: "99 CKB" },
+          receiver_accept_funding: { shannons: "9900000000", ckb: "99 CKB" },
+          fee_headroom: { shannons: "2000000000", ckb: "20 CKB" },
+          minimum_opener_funding: { shannons: "12000000000", ckb: "120 CKB" },
+          recommended_opener_funding: { shannons: "12000000000", ckb: "120 CKB" },
+          estimated_usable_liquidity: { shannons: "2100000000", ckb: "21 CKB" },
+          explanation: "quoted",
+        },
+        invoice_currency: "Fibt",
+        invoice_description: "phase 8 before/after payment proof",
+        readiness_before: {
+          service_node: "node13",
+          receiver_pubkey: "03receiver",
+          service_node_pubkey: "03service",
+          receiver_reachable: true,
+          peer_connected: false,
+          channel_ready: false,
+          outbound_liquidity_sufficient: false,
+          readiness_status: "not_ready",
+          reason: "not ready",
+          recommended_quote: {
+            target_payment: { shannons: "100000000", ckb: "1 CKB" },
+            receiver_reserve_required: { shannons: "9900000000", ckb: "99 CKB" },
+            receiver_accept_funding: { shannons: "9900000000", ckb: "99 CKB" },
+            fee_headroom: { shannons: "2000000000", ckb: "20 CKB" },
+            minimum_opener_funding: { shannons: "12000000000", ckb: "120 CKB" },
+            recommended_opener_funding: { shannons: "12000000000", ckb: "120 CKB" },
+            estimated_usable_liquidity: { shannons: "2100000000", ckb: "21 CKB" },
+            explanation: "quoted",
+          },
+        },
+        channel_plan: {
+          service_node: "node13",
+          receiver_node: "node15",
+          receiver_pubkey: "03receiver",
+          target_payment: { shannons: "100000000", ckb: "1 CKB" },
+          opener_funding: { shannons: "12000000000", ckb: "120 CKB" },
+          receiver_accept_funding: { shannons: "9900000000", ckb: "99 CKB" },
+          readiness_satisfied: false,
+          accept_mode: "detect",
+          planned_steps: ["open channel"],
+          readiness: {
+            service_node: "node13",
+            receiver_pubkey: "03receiver",
+            service_node_pubkey: "03service",
+            receiver_reachable: true,
+            peer_connected: false,
+            channel_ready: false,
+            outbound_liquidity_sufficient: false,
+            readiness_status: "not_ready",
+            reason: "not ready",
+            recommended_quote: {
+              target_payment: { shannons: "100000000", ckb: "1 CKB" },
+              receiver_reserve_required: { shannons: "9900000000", ckb: "99 CKB" },
+              receiver_accept_funding: { shannons: "9900000000", ckb: "99 CKB" },
+              fee_headroom: { shannons: "2000000000", ckb: "20 CKB" },
+              minimum_opener_funding: { shannons: "12000000000", ckb: "120 CKB" },
+              recommended_opener_funding: { shannons: "12000000000", ckb: "120 CKB" },
+              estimated_usable_liquidity: { shannons: "2100000000", ckb: "21 CKB" },
+              explanation: "quoted",
+            },
+          },
+        },
+        planned_steps: ["open channel"],
+      },
+      execution: {
+        status: "rpc_error",
+        reason: "Fiber RPC error -32000: Invalid parameter: Peer feature not found",
+        before_payment: {
+          attempted: true,
+          payment_hash: "0xhash",
+          invoice_address: "fibt1demo",
+          status: "error",
+          failed_error: "Failed to build route",
+        },
+        channel: {
+          status: "rpc_error",
+          reason: "waiting for peer to send Init message",
+          manual_accept_attempted: false,
+        },
+        after_payment: {
+          attempted: false,
+          payment_hash: "0xhash",
+          invoice_address: "fibt1demo",
+          status: "skipped",
+        },
+        receiver_invoice_status: "unknown",
+      },
+    });
+
+    expect(output).toContain("After Sluice: proof did not complete");
+    expect(output).not.toContain("After Sluice: receiver is payable");
+  });
+
+  it("does not present failed live proof runs as successful in the public demo body", () => {
+    const output = formatPublicDemoBody({
+      config: readDemoConfig(makeEnv({
+        SLUICE_DEMO_EXECUTE: "true",
+        SLUICE_DEMO_YES: "true",
+      })),
+      endpoints: {
+        serviceRpcUrl: "http://127.0.0.1:8347",
+        receiverRpcUrl: "http://127.0.0.1:8387",
+      },
+      liveExecutionEnabled: true,
+      doctor: {
+        mode: "read-only",
+        service_node: "node13",
+        receiver_node: "node15",
+        accept_mode: "detect",
+        quote: {
+          target_payment: { shannons: "100000000", ckb: "1 CKB" },
+          receiver_reserve_required: { shannons: "9900000000", ckb: "99 CKB" },
+          receiver_accept_funding: { shannons: "9900000000", ckb: "99 CKB" },
+          fee_headroom: { shannons: "2000000000", ckb: "20 CKB" },
+          minimum_opener_funding: { shannons: "12000000000", ckb: "120 CKB" },
+          recommended_opener_funding: { shannons: "12000000000", ckb: "120 CKB" },
+          estimated_usable_liquidity: { shannons: "2100000000", ckb: "21 CKB" },
+          explanation: "quoted",
+        },
+        safety: {
+          read_only: true,
+          dry_run_default: true,
+          execute_allowed: false,
+          execute_requires_yes: true,
+        },
+        service: {
+          rpc_reachable: true,
+          node_info_available: true,
+          pubkey: "03service",
+          list_peers_available: true,
+          list_channels_available: true,
+        },
+        receiver: {
+          rpc_reachable: true,
+          node_info_available: true,
+          pubkey: "03receiver",
+          list_channels_available: true,
+        },
+        rpc_methods: {
+          service: { node_info: true, list_peers: true, list_channels: true },
+          receiver: { node_info: true, list_channels: true },
+        },
+      } as never,
+      proof: {
+        mode: "execute",
+        plan: {
+          service_node: "node13",
+          receiver_node: "node15",
+          receiver_pubkey: "03receiver",
+          target_payment: { shannons: "100000000", ckb: "1 CKB" },
+          quote: {
+            target_payment: { shannons: "100000000", ckb: "1 CKB" },
+            receiver_reserve_required: { shannons: "9900000000", ckb: "99 CKB" },
+            receiver_accept_funding: { shannons: "9900000000", ckb: "99 CKB" },
+            fee_headroom: { shannons: "2000000000", ckb: "20 CKB" },
+            minimum_opener_funding: { shannons: "12000000000", ckb: "120 CKB" },
+            recommended_opener_funding: { shannons: "12000000000", ckb: "120 CKB" },
+            estimated_usable_liquidity: { shannons: "2100000000", ckb: "21 CKB" },
+            explanation: "quoted",
+          },
+          invoice_currency: "Fibt",
+          invoice_description: "phase 8 before/after payment proof",
+          readiness_before: {
+            service_node: "node13",
+            receiver_pubkey: "03receiver",
+            service_node_pubkey: "03service",
+            receiver_reachable: true,
+            peer_connected: false,
+            channel_ready: false,
+            outbound_liquidity_sufficient: false,
+            readiness_status: "not_ready",
+            reason: "not ready",
+            recommended_quote: {
+              target_payment: { shannons: "100000000", ckb: "1 CKB" },
+              receiver_reserve_required: { shannons: "9900000000", ckb: "99 CKB" },
+              receiver_accept_funding: { shannons: "9900000000", ckb: "99 CKB" },
+              fee_headroom: { shannons: "2000000000", ckb: "20 CKB" },
+              minimum_opener_funding: { shannons: "12000000000", ckb: "120 CKB" },
+              recommended_opener_funding: { shannons: "12000000000", ckb: "120 CKB" },
+              estimated_usable_liquidity: { shannons: "2100000000", ckb: "21 CKB" },
+              explanation: "quoted",
+            },
+          },
+          channel_plan: {
+            service_node: "node13",
+            receiver_node: "node15",
+            receiver_pubkey: "03receiver",
+            target_payment: { shannons: "100000000", ckb: "1 CKB" },
+            opener_funding: { shannons: "12000000000", ckb: "120 CKB" },
+            receiver_accept_funding: { shannons: "9900000000", ckb: "99 CKB" },
+            readiness_satisfied: false,
+            accept_mode: "detect",
+            planned_steps: ["open channel"],
+            readiness: {
+              service_node: "node13",
+              receiver_pubkey: "03receiver",
+              service_node_pubkey: "03service",
+              receiver_reachable: true,
+              peer_connected: false,
+              channel_ready: false,
+              outbound_liquidity_sufficient: false,
+              readiness_status: "not_ready",
+              reason: "not ready",
+              recommended_quote: {
+                target_payment: { shannons: "100000000", ckb: "1 CKB" },
+                receiver_reserve_required: { shannons: "9900000000", ckb: "99 CKB" },
+                receiver_accept_funding: { shannons: "9900000000", ckb: "99 CKB" },
+                fee_headroom: { shannons: "2000000000", ckb: "20 CKB" },
+                minimum_opener_funding: { shannons: "12000000000", ckb: "120 CKB" },
+                recommended_opener_funding: { shannons: "12000000000", ckb: "120 CKB" },
+                estimated_usable_liquidity: { shannons: "2100000000", ckb: "21 CKB" },
+                explanation: "quoted",
+              },
+            },
+          },
+          planned_steps: ["open channel"],
+        },
+        execution: {
+          status: "rpc_error",
+          reason: "Fiber RPC error -32000: Invalid parameter: Peer feature not found",
+          before_payment: {
+            attempted: true,
+            payment_hash: "0xhash",
+            invoice_address: "fibt1demo",
+            status: "error",
+            failed_error: "Failed to build route",
+          },
+          channel: {
+            status: "rpc_error",
+            reason: "waiting for peer to send Init message",
+            manual_accept_attempted: false,
+          },
+          after_payment: {
+            attempted: false,
+            payment_hash: "0xhash",
+            invoice_address: "fibt1demo",
+            status: "skipped",
+          },
+          receiver_invoice_status: "unknown",
+        },
+      },
+    });
+
+    expect(output).toContain("Live proof did not complete cleanly.");
+    expect(output).not.toContain("After Sluice: payment succeeded and invoice became Paid.");
   });
 });

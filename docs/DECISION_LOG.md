@@ -546,3 +546,14 @@ Findings and actions:
 - **Mobile viewport**: never tested this session (everything only verified at 1400x900 desktop). Found two real bugs on a 390px viewport: (1) the top nav had no responsive handling and forced horizontal overflow -- fixed by hiding the in-page anchor links below 640px, keeping GitHub/npm buttons visible; (2) a real regression from the earlier "100vh hero" change -- adding `display: flex` to `section.hero` turned its `.wrap` child into a flex item, and flex items default to `min-width: auto`, which refuses to shrink below content's intrinsic minimum width. This is why it never appeared at desktop width but broke completely on mobile. Fixed by adding `width: 100%; min-width: 0;` to `.wrap`. Re-verified with a DOM-level overflow diagnostic (not just visual screenshots) before and after: overflowing elements went from 5 down to 0.
 - **Orphaned directories**: found two more empty, untracked, unreferenced directories (`src/lsp`, `src/spike`) beyond the `$node8`/`fixtures/` cleanup earlier -- same category, removed.
 - No live execute was run.
+
+## 2026-07-12 demo proof reporting hardening and rerun policy
+
+Decision:
+
+- A judge-facing proof command must never claim success unless the full proof actually completed. Updated the demo reporting so `After Sluice: receiver is payable` appears only when `ChannelReady` was reached, the payment retry returned `Success`, and the receiver invoice became `Paid`.
+- Suppressed dotenv tip/marketing output in demo commands with `quiet: true` so terminal recordings start with Sluice's own output instead of unrelated dependency chatter.
+- Fresh live reruns against `node13/node15` and then `node14/node16` are treated as environment diagnostics, not as evidence against the already logged successful proof. The clearest blocker in those reruns was upstream public CKB RPC instability during funding collaboration: first `error sending request` against `https://testnet.ckbapp.dev/`, then `error decoding response body` during repeated fund-channel attempts against `https://testnet.ckb.dev/`, ending in `FUNDING_ABORTED`.
+- Therefore the successful 2026-07-10 local proof remains the authoritative before/after evidence for judges.
+- Any new terminal clip should only be presented as a successful live proof if it ends with `ChannelReady`, payment `Success`, and receiver invoice `Paid`; otherwise it should be discarded or explicitly labeled as an environment failure.
+- Updated `.env.demo.example` and `docs/DEMO.md` to use explicit env-backed placeholder node names (`service1`, `receiver1`) instead of implying one maintainer's stale local node names are the default demo path.

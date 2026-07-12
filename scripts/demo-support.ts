@@ -46,7 +46,7 @@ export interface PublicDemoStory {
 }
 
 export function loadDemoEnv(): void {
-  loadDotenv({ path: demoEnvPaths, override: false });
+  loadDotenv({ path: demoEnvPaths, override: false, quiet: true });
 }
 
 export function isHelpRequested(argv: string[]): boolean {
@@ -231,6 +231,10 @@ function quoteLine(label: string, shannons: string, ckb: string): string {
   return `${label}: ${ckb} (${shannons} shannons)`;
 }
 
+function normalizeStatus(status: unknown): string {
+  return typeof status === "string" ? status.toLowerCase() : "";
+}
+
 function extractErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
@@ -286,6 +290,7 @@ export function formatPublicDemoIntro(
 }
 
 export function formatPublicDemoBody(story: PublicDemoStory): string {
+  const proofCompleted = story.proof.execution ? proofCompletedSuccessfully(story.proof.execution) : false;
   const lines = [
     formatDemoDoctor(story.doctor),
     "",
@@ -296,7 +301,9 @@ export function formatPublicDemoBody(story: PublicDemoStory): string {
     story.liveExecutionEnabled ? formatDemoProof(story.proof) : formatDemoDry(story.proof),
     "",
     story.liveExecutionEnabled
-      ? "Before Sluice: receiver was not payable. After Sluice: payment succeeded and invoice became Paid."
+      ? proofCompleted
+        ? "Before Sluice: receiver was not payable. After Sluice: payment succeeded and invoice became Paid."
+        : "Live proof did not complete cleanly. Review the execution details above before claiming a successful payment proof."
       : "Dry-run complete. This shows the flow without changing Fiber state.",
   ];
 
@@ -352,6 +359,7 @@ export function formatDemoProof(result: ProofResult): string {
 
   const beforeFailure = result.execution.before_payment.failed_error ?? result.execution.before_payment.status;
   const afterStatus = result.execution.after_payment.status;
+  const proofCompleted = proofCompletedSuccessfully(result.execution);
   const lines = [
     "Sluice live proof",
     `Service node: ${result.plan.service_node}`,
@@ -375,9 +383,19 @@ export function formatDemoProof(result: ProofResult): string {
     `   Invoice status: ${result.execution.receiver_invoice_status ?? "unknown"}`,
     "8. Final result",
     `   Before Sluice: receiver was not payable`,
-    `   After Sluice: receiver is payable`,
+    `   After Sluice: ${proofCompleted ? "receiver is payable" : "proof did not complete"}`,
     `   Note: ${result.execution.reason}`,
   ];
 
   return lines.join("\n");
+}
+
+function proofCompletedSuccessfully(execution: NonNullable<ProofResult["execution"]>): boolean {
+  const channelReady = execution.channel.status === "ready";
+  const paymentSucceeded = normalizeStatus(execution.after_payment.status) === "success";
+  const invoicePaid = normalizeStatus(execution.receiver_invoice_status) === "paid";
+  const servicePaymentSucceeded =
+    execution.service_payment_status === undefined || normalizeStatus(execution.service_payment_status) === "success";
+
+  return execution.status === "ready" && channelReady && paymentSucceeded && invoicePaid && servicePaymentSucceeded;
 }

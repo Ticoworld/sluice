@@ -13,6 +13,8 @@ cp .env.demo.example .env.demo
 npm run demo
 ```
 
+`.env.demo.example` intentionally uses placeholder names (`service1`, `receiver1`) plus explicit `SLUICE_<NAME>_RPC_URL` entries so the demo does not silently depend on one maintainer's old local node names.
+
 `npm run demo` loads `.env.demo`, checks the configured service and receiver, computes the quote, checks readiness, and then:
 
 - runs a safe dry-run story when live execution is not enabled
@@ -51,25 +53,29 @@ npx tsx src/index.ts quote --amount-ckb 1
 ```
 
 ```powershell
-$env:SLUICE_NODE9_RPC_URL="http://127.0.0.1:8307"
-npx tsx src/index.ts readiness --service node4 --receiver-pubkey <node9_pubkey> --amount-ckb 1
+$env:SLUICE_SERVICE1_RPC_URL="http://127.0.0.1:8257"
+$env:SLUICE_RECEIVER1_RPC_URL="http://127.0.0.1:8307"
+npx tsx src/index.ts readiness --service service1 --receiver-pubkey <receiver1_pubkey> --amount-ckb 1
 ```
 
 ```powershell
-$env:SLUICE_NODE9_RPC_URL="http://127.0.0.1:8307"
-npx tsx src/index.ts prepare-inbound --service node4 --receiver node9 --amount-ckb 1
+$env:SLUICE_SERVICE1_RPC_URL="http://127.0.0.1:8257"
+$env:SLUICE_RECEIVER1_RPC_URL="http://127.0.0.1:8307"
+npx tsx src/index.ts prepare-inbound --service service1 --receiver receiver1 --amount-ckb 1
 ```
 
 ```powershell
-$env:SLUICE_NODE9_RPC_URL="http://127.0.0.1:8307"
-npx tsx src/index.ts prove-payment --service node4 --receiver node9 --amount-ckb 1
+$env:SLUICE_SERVICE1_RPC_URL="http://127.0.0.1:8257"
+$env:SLUICE_RECEIVER1_RPC_URL="http://127.0.0.1:8307"
+npx tsx src/index.ts prove-payment --service service1 --receiver receiver1 --amount-ckb 1
 ```
 
 Live mutation is only for prepared local nodes:
 
 ```powershell
-$env:SLUICE_NODE9_RPC_URL="http://127.0.0.1:8307"
-npx tsx src/index.ts prove-payment --service node4 --receiver node9 --amount-ckb 1 --execute --yes
+$env:SLUICE_SERVICE1_RPC_URL="http://127.0.0.1:8257"
+$env:SLUICE_RECEIVER1_RPC_URL="http://127.0.0.1:8307"
+npx tsx src/index.ts prove-payment --service service1 --receiver receiver1 --amount-ckb 1 --execute --yes
 ```
 
 ## Hosted Demo
@@ -113,3 +119,9 @@ The working quote for the proof case was:
 - Sluice can prepare reserve-aware inbound liquidity.
 - Sluice can retry after `ChannelReady`.
 - Sluice can verify the payment and invoice state after the retry.
+
+## Fresh rerun note
+
+- The authoritative successful live proof is the recorded Phase 8B run documented in `docs/REAL_VS_SIMULATED.md`, `docs/DECISION_LOG.md`, and `docs/SPIKE_LOG.md`.
+- Fresh reruns can still fail if the local operator relies on unstable public CKB RPC infrastructure during funding-collaboration steps.
+- If a live rerun does not end with `ChannelReady`, payment `Success`, and receiver invoice `Paid`, treat it as an environment failure and do not present it as a successful proof clip.
